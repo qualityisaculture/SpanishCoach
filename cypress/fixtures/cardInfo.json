@@ -1,0 +1,47 @@
+{
+  "new": [
+    {
+      "id": 1,
+      "noteId": 1,
+      "front": "new card",
+      "back": "new card back",
+      "failInterval": "0",
+      "hardInterval": "0",
+      "mediumInterval": "0",
+      "easyInterval": "0",
+      "due": 0,
+      "isNew": true,
+      "leftToStudy": 0
+    }
+  ],
+  "learn": [
+    {
+      "id": 2,
+      "noteId": 2,
+      "front": "learn card",
+      "back": "learn card back",
+      "failInterval": "0",
+      "hardInterval": "0",
+      "mediumInterval": "0",
+      "easyInterval": "0",
+      "due": 0,
+      "isNew": true,
+      "leftToStudy": 0
+    }
+  ],
+  "due": [
+    {
+      "id": 4,
+      "noteId": 4,
+      "front": "due card",
+      "back": "due card back",
+      "failInterval": "0",
+      "hardInterval": "0",
+      "mediumInterval": "0",
+      "easyInterval": "0",
+      "due": 0,
+      "isNew": true,
+      "leftToStudy": 0
+    }
+  ]
+}

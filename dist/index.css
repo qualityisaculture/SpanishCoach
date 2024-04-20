@@ -1,0 +1,77 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  touch-action: pan-x pan-y;
+  height: 100% 
+}
+
+main,
+header {
+  margin: 10px;
+}
+
+html, body {
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+b {
+  font-weight: bolder;
+}
+
+#root {
+  height: 100%;
+  position: fixed;
+  width: 100%;
+}
+
+main {
+  height: 100%;
+}
+
+.card {
+  height: 100%;
+}
+
+footer {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+}
+
+.footer {
+  /* background-color: #333; */
+  color: white;
+  text-align: center;
+  padding: 10px;
+}
+
+#new-task-input {
+  flex: 1 1 0%;
+  background-color: var(--darker);
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-right: 1rem;
+  color: var(--light);
+  font-size: 1.25rem;
+}
+
+.ant-btn.ant-btn-icon-only {
+  width: 10%;
+}
+.ant-btn-compact-first-item {
+  width: 90%;
+}
+
+.ant-typography {
+  text-align: center;
+}
+
+.translationDirection {
+  position: absolute;
+  right: 10px;
+}
