@@ -10,4 +10,3 @@ Feature: Basic Translation
     When I switch the translation direction
     And I type "Hello" in the search box
     Then I should see "Hola" in the response
-

@@ -1,13 +1,13 @@
 /// <reference types="Cypress" />
 import SearchPage from '../pages/Search.page';
 let searchPage: SearchPage;
-describe('Search', () => {
+describe('Translation', () => {
   beforeEach(() => {
     searchPage = new SearchPage();
     searchPage.visit();
   });
 
-  describe('Basic search', () => {
+  describe('Basic Translation', () => {
     it('should return "Hello" when "Hola" is searched', () => {
       searchPage.typeQuery('Hola');
       searchPage.getTranslation().should('contain', 'Hello');
