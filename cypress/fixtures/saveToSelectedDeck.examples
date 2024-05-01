@@ -1,0 +1,4 @@
+    | translation-direction | spanish | english | save-direction | deck | front | back |
+    | S->E | Hola | Hello | E->S | default | Hola | Hello |
+    | S->E| Hola | Hello | E->S | deck2 | Hola | Hello |  
+    | S->E | Hola | Hello | E->S | deck3 | Hola | Hello |

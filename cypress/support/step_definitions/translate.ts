@@ -32,8 +32,29 @@ When('I switch the translation direction', () => {
   searchPage.switchTranslationDirection();
 });
 
+When('I set the translation direction to {string}', (direction: string) => {
+  if (direction === 'E->S') {
+    searchPage.switchTranslationDirection();
+  }
+});
+
+
 When('I open the deck dropdown', () => {
   searchPage.openDeckDropdown();
+});
+
+When('I select {string}', (deck: string) => {
+  searchPage.selectDeck(deck);
+});
+
+When('I switch the save direction', () => {
+  searchPage.switchSaveDirection();
+});
+
+When('I set the save direction to {string}', (direction: string) => {
+  if (direction === 'S->E') {
+    searchPage.switchSaveDirection();
+  }
 });
 
 When('I click the save button', () => {

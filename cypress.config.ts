@@ -1,13 +1,15 @@
 import { defineConfig } from 'cypress';
 import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
-import createEsbuildPlugin from '@badeball/cypress-cucumber-preprocessor/esbuild';
+import myEsbuildPlugin from './src/utils/myEsbuildPlugin'
+import DynamicScenarioOutlinePlugin from './src/utils/DynamicScenarioOutlinePlugin';
+
 
 async function addCucumber(on, config) {
   await addCucumberPreprocessorPlugin(on, config); // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   on(
     'file:preprocessor', //This converts the feature files into js
-    createBundler({ plugins: [createEsbuildPlugin(config)] })
+    createBundler({ plugins: [myEsbuildPlugin(config, [DynamicScenarioOutlinePlugin]) ] })
   );
 }
 
