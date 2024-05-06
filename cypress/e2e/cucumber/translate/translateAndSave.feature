@@ -37,7 +37,7 @@ Feature: Translate and Save
     | deckName | front | back |
     | deck2 | Hola | Hello |
 
-    Scenario Outline: save to selected deck
+    Scenario Outline: save to selected deck matrix
     Given I am on the search page
     When I set the translation direction to "<translation-direction>"
     When I type "<spanish>" in the search box

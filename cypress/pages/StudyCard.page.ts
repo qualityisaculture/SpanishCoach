@@ -1,19 +1,50 @@
+import { Card } from '../../src/Types';
+import _ from 'lodash';
 import {
+  answerCardRequestType,
+  answerCardResponseType,
   dueCardsResponseType,
   updateCardResponseType,
 } from '../../src/server/routes/anki';
 import EditComponent from '../e2e/components/Edit.component';
 
+export function getMockCard(type: string, id: number): Card {
+  return {
+    "id": id,
+    "noteId": id,
+    "front": `${type} card front ${id+1}`,
+    "back": `${type} card back ${id+1}`,
+    "failInterval": "0",
+    "hardInterval": "0",
+    "mediumInterval": "0",
+    "easyInterval": "0",
+    "due": 0,
+    "isNew": true,
+    "leftToStudy": 0
+  }
+}
+
+export function getMockCards(newCount: number, dueCount: number, learnCount: number): dueCardsResponseType {
+  let newCards: Card[] = _.range(0, newCount).map((i: number) => getMockCard("new", i));
+  let dueCards: Card[] = _.range(0, dueCount).map((i: number) => getMockCard("due", i));
+  let learnCards: Card[] = _.range(0, learnCount).map((i: number) => getMockCard("learn", i));
+  return {
+    "new": newCards,
+    "due": dueCards,
+    "learn": learnCards,
+  }
+}
+
 export default class StudyCard {
-  constructor() {
-    this.setupDueCardsIntercept();
+  constructor(cards? : dueCardsResponseType) {
+    this.setupDueCardsIntercept(cards);
     this.setupSaveCardIntercept();
-    this.setupChatResponseIntercept();
+    this.setupAnswerCardIntercept();
   }
 
-  setupDueCardsIntercept = () => {
-    cy.fixture('cardInfo.json').then((data) => {
-      let response: dueCardsResponseType = data;
+  setupDueCardsIntercept = async (cards?: dueCardsResponseType) => {
+    cy.fixture('cardInfo.json').then((data) => { 
+      let response: dueCardsResponseType = cards ? cards : data;
       cy.intercept('GET', '/dueCards?deck=deck1', {
         statusCode: 200,
         body: response,
@@ -32,14 +63,12 @@ export default class StudyCard {
     });
   };
 
-  setupChatResponseIntercept = () => {
-    cy.intercept('GET', '/chat?messages=**', (req) => {
-      req.reply({
-        statusCode: 200,
-        body: 'response',
-      });
-    }).as('chatRequest');
-  };
+  setupAnswerCardIntercept = () => {
+    cy.intercept('POST', '/answerCard', {
+      statusCode: 200,
+      body: 'response',
+    });
+  }
 
   tapBack() {
     cy.get('#back').click();
@@ -81,8 +110,16 @@ export default class StudyCard {
     cy.get('.card').click();
   }
 
+  getModalButton() {
+    return cy.get('.modal-button');
+  }
+
+  getChatModal() { 
+    return cy.get('.ant-modal-content')
+  }
+
   tapModalButton() {
-    cy.get('.modal-button').click();
+    this.getModalButton().click();
   }
 
   tapAnswerEasy() {
