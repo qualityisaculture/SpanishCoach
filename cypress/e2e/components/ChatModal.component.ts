@@ -17,7 +17,7 @@ export default class ChatModal {
           body: response,
         });
       });
-    });
+    }).as('chatRequest');
   };
 
   tapClose() {
@@ -41,7 +41,7 @@ export default class ChatModal {
   };
 
   tapSend() {
-    cy.get('#modal > button').click();
+    return cy.get('#modal > button').click();
   }
 
   getChatRequest = () => {
