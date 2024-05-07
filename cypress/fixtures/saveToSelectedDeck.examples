@@ -1,0 +1,9 @@
+    | translation-direction | spanish | english | save-direction | deck    | front  | back  |
+    | S->E                  | Hola    | Hello   | E->S           | default | Hola   | Hello |
+    | S->E                  | Hola    | Hello   | E->S           | deck2   | Hola   | Hello |  
+    | S->E                  | Hola    | Hello   | S->E           | default | Hello  | Hola  |
+    | S->E                  | Hola    | Hello   | S->E           | deck2   | Hello  | Hola  | 
+    | E->S                  | Hello   | Hola    | E->S           | default | Hola   | Hello |
+    | E->S                  | Hello   | Hola    | E->S           | deck2   | Hola   | Hello |  
+    | E->S                  | Hello   | Hola    | S->E           | default | Hello  | Hola  |
+    | E->S                  | Hello   | Hola    | S->E           | deck2   | Hello  | Hola  |  
