@@ -36,7 +36,7 @@ Given('I am on the study menu', () => {
 });
 
 Given('I am on a due card page', () => {
-  let cards = getMockCards(0, 1, 0);
+  let cards = getMockCards(0, 0, 1);
   studyCardPage = new StudyCard(cards);
   studyMenuPage.visit();
   studyMenuPage.tapDeck('deck1');
@@ -46,8 +46,8 @@ When('I tap a deck with the following cards:', (cardsTable: DataTable) => {
   let cardsCount = asObjects(cardsTable);
   let cards = getMockCards(
     parseInt(cardsCount[0].new),
-    parseInt(cardsCount[0].due),
-    parseInt(cardsCount[0].learn)
+    parseInt(cardsCount[0].learn),
+    parseInt(cardsCount[0].due)
   );
   studyCardPage = new StudyCard(cards);
   studyMenuPage.tapDeck('deck1');
@@ -59,6 +59,7 @@ When('I tap the card', () => {
 
 When('I tap {string}', (buttonString) => {
   if (buttonString === 'deck1') {
+    studyCardPage = new StudyCard(getMockCards(0, 0, 1));
     studyMenuPage.tapDeck('deck1');
   } else if (buttonString === 'back') {
     studyCardPage.tapBack();

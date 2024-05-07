@@ -179,17 +179,21 @@ describe('Study', () => {
         studyCardPage.tapCard();
         studyCardPage.tapModalButton();
         chatModal.addToChatInput(' change');
-        chatModal.tapSend();
+        chatModal.tapSend().then(() => {
+          chatModal.respondToChat('response');
+        });
         chatModal.getChatRequest().then((interception) => {
           expect(interception.request.url).to.contain(encodeURIComponent('due card back change'));
         });
-      });
+      }); 
 
       it('should display the response when the response is sent', () => {
         studyCardPage.tapCard();
         studyCardPage.tapModalButton();
         chatModal.addToChatInput(' change');
-        chatModal.tapSend();
+        chatModal.tapSend().then(() => {
+          chatModal.respondToChat('response');
+        });
         chatModal.getChatMessage(2).contains('response');
       });
     });

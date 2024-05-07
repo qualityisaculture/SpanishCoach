@@ -12,7 +12,6 @@ Feature: Study Card Edit
     And I edit the front of the card to "new front"
     And I edit the back of the card to "new back"
     And I tap "cancel"
-    And I tap the card
     Then I cannot edit the front of the card
     And I cannot edit the back of the card 
     And I should see the question "due card front 1"

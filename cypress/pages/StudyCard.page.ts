@@ -24,7 +24,7 @@ export function getMockCard(type: string, id: number): Card {
   }
 }
 
-export function getMockCards(newCount: number, dueCount: number, learnCount: number): dueCardsResponseType {
+export function getMockCards(newCount: number, learnCount: number, dueCount: number): dueCardsResponseType {
   let newCards: Card[] = _.range(0, newCount).map((i: number) => getMockCard("new", i));
   let dueCards: Card[] = _.range(0, dueCount).map((i: number) => getMockCard("due", i));
   let learnCards: Card[] = _.range(0, learnCount).map((i: number) => getMockCard("learn", i));
