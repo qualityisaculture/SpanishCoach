@@ -70,120 +70,17 @@ export default class Card extends React.Component<Props, State> {
   questionClicked = () => {
     this.setState({ state: 'answer' });
   };
-  questionAnswered = (buttonId: string) => {
-    let ease = parseInt(buttonId) as 1 | 2 | 3 | 4;
+  questionAnswered = (ease: 1 | 2 | 3 | 4) => {
     this.props.cardAnswered(ease);
     this.setState({ state: 'question' });
-  };
-  getAnswerButtons = () => {
-    const buttons: ButtonRowButtonType[] = [
-      {
-        text: 'Again',
-        additionalText: this.props.card.failInterval,
-        key: '1',
-        id: 'answer-again',
-        style: { backgroundColor: red[4] },
-      },
-      {
-        text: 'Hard',
-        additionalText: this.props.card.hardInterval,
-        key: '2',
-        id: 'answer-hard',
-        style: { backgroundColor: orange[4] },
-      },
-      {
-        text: 'Medium',
-        additionalText: this.props.card.mediumInterval,
-        key: '3',
-        id: 'answer-medium',
-        style: { backgroundColor: green[4] },
-      },
-      {
-        text: 'Easy',
-        additionalText: this.props.card.easyInterval,
-        key: '4',
-        id: 'answer-easy',
-        style: { backgroundColor: blue[4] },
-      },
-    ];
-    return buttons;
   };
   questionEdited = (value: string) => {
     this.setState({ front: value });
   };
-  question = () => {
-    return (
-      <>
-        <h4
-          dangerouslySetInnerHTML={{ __html: this.state.front }}
-          className="card-front ant-typography css-dev-only-do-not-override-1drr2mu"
-        />
-        {this.state.editMode ? (
-          <EditComponent
-            inputId='card-front-input'
-            defaultValue={this.state.front}
-            onChange={this.questionEdited}
-          />
-        ) : null}
-      </>
-    );
-  };
   answerEdited = (value: string) => {
     this.setState({ back: value });
-  };
-  answer = () => {
-    if (this.state.editMode) {
-      return (
-        <>
-          <Divider />
-          <h4
-            dangerouslySetInnerHTML={{ __html: this.state.back }}
-            className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
-          />
-          <EditComponent
-            inputId='card-back-input'
-            defaultValue={this.state.back}
-            onChange={this.answerEdited}
-          />
-        </>
-      );
-    }
-
-    if (this.state.state === 'answer') {
-      let tempDivElement = document.createElement("div");
-      tempDivElement.innerHTML = this.state.back;
-      let strippedBack = tempDivElement.textContent || "";
-      return (
-        <>
-          <Divider />
-          <h4
-            dangerouslySetInnerHTML={{ __html: this.state.back }}
-            className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
-          />
-          <ButtonRow
-            block
-            style={buttonRowStyle}
-            buttons={this.getAnswerButtons()}
-            onClick={this.questionAnswered}
-          />
-          <FloatButton
-            className="modal-button"
-            shape="circle"
-            type="primary"
-            style={{ right: 50, bottom: 150 }}
-            icon={<QuestionCircleOutlined />}
-            onClick={() => this.setState({ isModalOpen: true })}
-          />
-          <ChatModal
-            originalAnswer={strippedBack}
-            isModalOpen={this.state.isModalOpen}
-            onCancel={() => this.setState({ isModalOpen: false })}
-          ></ChatModal>
-        </>
-      );
-    }
-  };
-  updateServer = async () => {
+  }
+  updateCardOnServer = async () => {
     let body: updateCardRequestType = {
       cardId: this.props.card.noteId,
       front: this.state.front,
@@ -196,12 +93,12 @@ export default class Card extends React.Component<Props, State> {
         'Content-Type': 'application/json',
       },
     });
-    const json: updateCardResponseType = await response.json();
+    const updateCardResponse: updateCardResponseType = await response.json();
     this.setState({
       state: 'question',
       editMode: false,
     });
-    if (json.success !== true) {
+    if (updateCardResponse.success !== true) {
       this.setState({
         front: this.state.originalFront,
         back: this.state.originalBack,
@@ -225,8 +122,7 @@ export default class Card extends React.Component<Props, State> {
         back: this.state.originalBack,
       });
     } else if (id === 'save') {
-      // this.setState({ editMode: false });
-      this.updateServer();
+      this.updateCardOnServer();
     }
   };
   getMenuButtons = () => {
@@ -234,8 +130,8 @@ export default class Card extends React.Component<Props, State> {
       return (
         <ButtonRow
           buttons={[
-            { text: 'Cancel', key: 'cancel', id: 'cancel'},
-            { text: 'Save', key: 'save', id: 'save'},
+            { text: 'Cancel', key: 'cancel', id: 'cancel' },
+            { text: 'Save', key: 'save', id: 'save' },
           ]}
           onClick={this.onMenuClick}
         />
@@ -244,25 +140,154 @@ export default class Card extends React.Component<Props, State> {
     return (
       <ButtonRow
         buttons={[
-          { text: 'Back', key: 'back', id: 'back'},
-          { text: 'Edit', key: 'edit', id: 'edit'},
+          { text: 'Back', key: 'back', id: 'back' },
+          { text: 'Edit', key: 'edit', id: 'edit' },
         ]}
         onClick={this.onMenuClick}
       />
     );
   };
   render() {
-    // if (this.state.state === 'question') {
-
     return (
       <>
         {this.getMenuButtons()}
         <Divider />
         <div className="card" onClick={this.questionClicked}>
-          {this.question()}
-          {this.answer()}
+          <Question
+            front={this.state.front}
+            editMode={this.state.editMode}
+            questionEdited={this.questionEdited}
+          />
+          {this.state.state === 'answer' || this.state.editMode ? (
+            <Answer
+              back={this.state.back}
+              editMode={this.state.editMode}
+              card={this.props.card}
+              answerEdited={this.answerEdited}
+              questionAnswered={this.questionAnswered}
+              isModalOpen={this.state.isModalOpen}
+              setModal={(open: boolean) => this.setState({ isModalOpen: open })}
+            />
+          ) : null}
         </div>
       </>
     );
   }
 }
+
+const Question = (props: {
+  front: string;
+  editMode: boolean;
+  questionEdited: (value: string) => void;
+}) => {
+  return (
+    <>
+      <h4
+        dangerouslySetInnerHTML={{ __html: props.front }}
+        className="card-front ant-typography css-dev-only-do-not-override-1drr2mu"
+      />
+      {props.editMode ? (
+        <EditComponent
+          inputId="card-front-input"
+          defaultValue={props.front}
+          onChange={props.questionEdited}
+        />
+      ) : null}
+    </>
+  );
+};
+
+const Answer = (props: {
+  back: string;
+  editMode: boolean;
+  card: CardType;
+  answerEdited: (value: string) => void;
+  questionAnswered: (ease: 1 | 2 | 3 | 4) => void;
+  isModalOpen: boolean;
+  setModal: (open: boolean) => void;
+}) => {
+  function questionAnswered(buttonId: string) {
+    let ease = parseInt(buttonId) as 1 | 2 | 3 | 4;
+    props.questionAnswered(ease);
+  }
+  function getAnswerButtons() {
+    const buttons: ButtonRowButtonType[] = [
+      {
+        text: 'Again',
+        additionalText: props.card.failInterval,
+        key: '1',
+        id: 'answer-again',
+        style: { backgroundColor: red[4] },
+      },
+      {
+        text: 'Hard',
+        additionalText: props.card.hardInterval,
+        key: '2',
+        id: 'answer-hard',
+        style: { backgroundColor: orange[4] },
+      },
+      {
+        text: 'Medium',
+        additionalText: props.card.mediumInterval,
+        key: '3',
+        id: 'answer-medium',
+        style: { backgroundColor: green[4] },
+      },
+      {
+        text: 'Easy',
+        additionalText: props.card.easyInterval,
+        key: '4',
+        id: 'answer-easy',
+        style: { backgroundColor: blue[4] },
+      },
+    ];
+    return buttons;
+  }
+  let tempDivElement = document.createElement('div');
+  tempDivElement.innerHTML = props.back;
+  let strippedBack = tempDivElement.textContent || '';
+  if (props.editMode) {
+    return (
+      <>
+        <Divider />
+        <h4
+          dangerouslySetInnerHTML={{ __html: props.back }}
+          className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
+        />
+        <EditComponent
+          inputId="card-back-input"
+          defaultValue={props.back}
+          onChange={props.answerEdited}
+        />
+      </>
+    );
+  }
+  return (
+    <>
+      <Divider />
+      <h4
+        dangerouslySetInnerHTML={{ __html: props.back }}
+        className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
+      />
+      <ButtonRow
+        block
+        style={buttonRowStyle}
+        buttons={getAnswerButtons()}
+        onClick={questionAnswered}
+      />
+      <FloatButton
+        className="modal-button"
+        shape="circle"
+        type="primary"
+        style={{ right: 50, bottom: 150 }}
+        icon={<QuestionCircleOutlined />}
+        onClick={() => props.setModal(true)}
+      />
+      <ChatModal
+        originalAnswer={strippedBack}
+        isModalOpen={props.isModalOpen}
+        onCancel={() => props.setModal(false)}
+      ></ChatModal>
+    </>
+  );
+};
