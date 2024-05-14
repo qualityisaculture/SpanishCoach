@@ -57,7 +57,7 @@ export default class ButtonRow extends React.Component<Props> {
   };
   render() {
     return (
-      <div style={this.props.style}>
+      <span style={this.props.style}>
         {this.props.buttons.map((button, index) => {
           if (button.additionalText) {
             return (
@@ -88,7 +88,7 @@ export default class ButtonRow extends React.Component<Props> {
             );
           }
         })}
-      </div>
+      </span>
     );
   }
 }
