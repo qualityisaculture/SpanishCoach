@@ -7,9 +7,7 @@ import { act } from 'react-dom/test-utils';
 import {
   render,
   initialiseDOM,
-  element,
-  click,
-  button,
+  element
 } from '../../reactTestExtensions';
 import DeckReview, { DeckSummary } from '../../../src/client/anki/DeckReview';
 import {
@@ -40,7 +38,19 @@ function answerEasy() {
     cardAnswered(4);
   });
 }
-function expectCardToBe(card: CardType) {
+function answerFail() {
+  let cardAnswered = mockCard.mock.calls[0][0].cardAnswered;
+  act(() => {
+    cardAnswered(1);
+  });
+}
+function backTapped() {
+  let onBack = mockCard.mock.calls[0][0].onBack;
+  act(() => {
+    onBack();
+  });
+}
+function expectCardToBe(card: CardType | null) {
   expect(mockCard).toHaveBeenLastCalledWith(
     {
       card: card,
@@ -75,20 +85,15 @@ describe('DeckReview', () => {
     await fetchMockHandler.afterEach();
   });
 
-  it('displays a back button when deck is empty', () => {
-    render(<DeckReview {...defaultProps} />);
-    expect(document.body.innerHTML).toContain('Back');
-  });
-
-  it('should display a message if deck is empty', () => {
+  it('should pass null to Card when deck is empty', () => {
     let deck = [];
     render(<DeckReview {...defaultProps} dueDeck={deck} />);
-    expect(document.body.innerHTML).toContain('No cards in deck');
+    expectCardToBe(null);
   });
 
   it('should call done when back button is clicked', () => {
     render(<DeckReview {...defaultProps} />);
-    click(button('Back'));
+    backTapped();
     expect(defaultProps.onDone).toHaveBeenCalled();
   });
 
@@ -282,10 +287,10 @@ describe('DeckReview', () => {
     });
 
     describe('answer learn cards', () => {
-      it('should display message when final card answered', () => {
+      it('set Card to null when final card answered', () => {
         render(<DeckReview {...algorithmProps} dueDeck={[]} newDeck={[]} />);
         answerEasy();
-        expect(document.body.innerHTML).toContain('No cards in deck');
+        expectCardToBe(null);
       });
 
       it('should put failed learn card back in the learn deck before server responds', async () => {
@@ -293,19 +298,37 @@ describe('DeckReview', () => {
           <DeckReview
             {...algorithmProps}
             dueDeck={[]}
-            learnDeck={dc(learnDeck)}
+            learnDeck={dc([learnCard, learnCard2])}
             newDeck={[]}
           />
         );
-        answerEasy();
         let card = JSON.parse(JSON.stringify(learnDeck[0]));
+        answerFail();
+        expectCardToBe(learnCard2);
+        answerEasy();
+        expectCardToBe({...learnCard, due: null});
+      });
+
+      it('should updated the failed learn card with new due date when server responds', async () => {
+        render(
+          <DeckReview
+            {...algorithmProps}
+            dueDeck={[]}
+            learnDeck={dc([learnCard, learnCard2])}
+            newDeck={[]}
+          />
+        );
+        let card = JSON.parse(JSON.stringify(learnDeck[0]));
+        answerFail();
+        expectCardToBe(learnCard2);
         let failResponse: answerCardResponseType = {
           success: true,
           message: null,
           card: card,
         };
         await fetchMockHandler.resolvePromise(0, failResponse);
-        expectCardToBe(learnDeck[0]);
+        answerEasy();
+        expectCardToBe(learnCard);
       });
 
       it('should put the successful learn card in the due deck(with the due time reset) before server responds when "left" is 2', async () => {
@@ -371,9 +394,15 @@ describe('DeckReview', () => {
       it('should not show new cards when newCards is called', () => {
         render(<DeckReview {...defaultNewCardsProps} newDeck={[newCard]} />);
         expectCardToBe(newCard);
-        expect(document.body.innerHTML).toContain('<div id="card"></div>');
         setStudyNewCardsTo(false);
-        expect(document.body.innerHTML).toContain('No cards in deck');
+        expectCardToBe(null);
+      });
+
+      it('should show new cards when newCards is called again', () => {
+        render(<DeckReview {...defaultNewCardsProps} newDeck={[newCard]} />);
+        setStudyNewCardsTo(false);
+        setStudyNewCardsTo(true);
+        expectCardToBe(newCard);
       });
 
       it('should skip new card when newCards is called', () => {
@@ -387,7 +416,7 @@ describe('DeckReview', () => {
         setStudyNewCardsTo(false);
         expectCardToBe(dueCard1);
         answerEasy();
-        expect(document.body.innerHTML).toContain('No cards in deck');
+        expectCardToBe(null);
       });
     });
   });

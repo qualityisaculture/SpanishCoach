@@ -11,6 +11,8 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Divider, FloatButton, Switch } from 'antd';
 import EditComponent from '../components/EditComponent';
 import { red, orange, green, blue } from '@ant-design/colors';
+import { Typography } from 'antd';
+const { Paragraph } = Typography;
 
 const buttonRowStyle: React.CSSProperties = {
   position: 'absolute',
@@ -22,7 +24,7 @@ const centerStyle: React.CSSProperties = {
   display: 'flex',
 };
 type Props = {
-  card: CardType;
+  card: CardType | null;
   cardAnswered: (ease: 1 | 2 | 3 | 4) => void;
   onBack: () => void;
   studyNewCards: (newCards: boolean) => void;
@@ -31,10 +33,12 @@ type Props = {
 type State = {
   state: 'question' | 'answer';
   editMode: boolean;
-  front: string;
-  back: string;
-  originalFront: string;
-  originalBack: string;
+  card: {
+    front: string;
+    back: string;
+    originalFront: string;
+    originalBack: string;
+  } | null;
   isModalOpen: boolean;
 };
 export default class Card extends React.Component<Props, State> {
@@ -46,10 +50,14 @@ export default class Card extends React.Component<Props, State> {
     this.state = {
       state: 'question',
       editMode: false,
-      front: props.card.front,
-      back: props.card.back,
-      originalFront: props.card.front,
-      originalBack: props.card.back,
+      card: props.card
+        ? {
+            front: props.card.front,
+            back: props.card.back,
+            originalFront: props.card.front,
+            originalBack: props.card.back,
+          }
+        : null,
       isModalOpen: false,
     };
   }
@@ -58,16 +66,18 @@ export default class Card extends React.Component<Props, State> {
     prevState: Readonly<State>,
     snapshot?: any
   ): void => {
-    if (prevProps.card !== this.props.card) {
+    if (this.props.card && prevProps.card !== this.props.card) {
       this.setState({
         state: 'question',
-        front: this.props.card.front,
-        back: this.props.card.back,
-        originalFront: this.props.card.front,
-        originalBack: this.props.card.back,
+        card: {
+          front: this.props.card.front,
+          back: this.props.card.back,
+          originalFront: this.props.card.front,
+          originalBack: this.props.card.back,
+        },
       });
     }
-  }
+  };
   questionClicked = () => {
     this.setState({ state: 'answer' });
   };
@@ -76,16 +86,25 @@ export default class Card extends React.Component<Props, State> {
     this.setState({ state: 'question' });
   };
   questionEdited = (value: string) => {
-    this.setState({ front: value });
+    if (!this.state.card) {
+      throw new Error('Card is null');
+    }
+    this.setState({ card: { ...this.state.card, front: value } });
   };
   answerEdited = (value: string) => {
-    this.setState({ back: value });
-  }
+    if (!this.state.card) {
+      throw new Error('Card is null');
+    }
+    this.setState({ card: { ...this.state.card, back: value } });
+  };
   updateCardOnServer = async () => {
+    if (!this.props.card || !this.state.card) {
+      throw new Error('Card is null');
+    }
     let body: updateCardRequestType = {
       cardId: this.props.card.noteId,
-      front: this.state.front,
-      back: this.state.back,
+      front: this.state.card.front,
+      back: this.state.card.back,
     };
     const response = await global.fetch('/updateCard', {
       method: 'POST',
@@ -101,13 +120,19 @@ export default class Card extends React.Component<Props, State> {
     });
     if (updateCardResponse.success !== true) {
       this.setState({
-        front: this.state.originalFront,
-        back: this.state.originalBack,
+        card: {
+          ...this.state.card,
+          front: this.state.card.originalFront,
+          back: this.state.card.originalBack,
+        },
       });
     } else {
       this.setState({
-        originalFront: this.state.front,
-        originalBack: this.state.back,
+        card: {
+          ...this.state.card,
+          originalFront: this.state.card.front,
+          originalBack: this.state.card.back,
+        },
       });
     }
   };
@@ -117,51 +142,87 @@ export default class Card extends React.Component<Props, State> {
     } else if (id === 'edit') {
       this.setState({ editMode: true });
     } else if (id === 'cancel') {
+      if (!this.state.card) {
+        throw new Error('Card is null');
+      }
       this.setState({
         editMode: false,
-        front: this.state.originalFront,
-        back: this.state.originalBack,
+        card: {
+          ...this.state.card,
+          front: this.state.card.originalFront,
+          back: this.state.card.originalBack,
+        },
       });
     } else if (id === 'save') {
       this.updateCardOnServer();
     }
   };
   getMenuButtons = () => {
-    if (this.state.editMode) {
+    const newCardsSwitch = (
+      <Switch
+        onChange={this.props.studyNewCards}
+        checkedChildren="New Cards"
+        unCheckedChildren="No New Cards"
+        defaultChecked
+      />
+    );
+    const backButton = { text: 'Back', key: 'back', id: 'back' };
+    const editButton = { text: 'Edit', key: 'edit', id: 'edit' };
+    const cancelButton = { text: 'Cancel', key: 'cancel', id: 'cancel' };
+    const saveButton = { text: 'Save', key: 'save', id: 'save' };
+    if (!this.state.card) {
       return (
-        <ButtonRow
-          buttons={[
-            { text: 'Cancel', key: 'cancel', id: 'cancel' },
-            { text: 'Save', key: 'save', id: 'save' },
-          ]}
-          onClick={this.onMenuClick}
-        />
+        <>
+          <ButtonRow buttons={[backButton]} onClick={this.onMenuClick} />
+          {newCardsSwitch}
+        </>
       );
     }
-    return (
+    const buttonRow = this.state.editMode ? (
       <ButtonRow
-        buttons={[
-          { text: 'Back', key: 'back', id: 'back' },
-          { text: 'Edit', key: 'edit', id: 'edit' },
-        ]}
+        buttons={[cancelButton, saveButton]}
+        onClick={this.onMenuClick}
+      />
+    ) : (
+      <ButtonRow
+        buttons={[backButton, editButton]}
         onClick={this.onMenuClick}
       />
     );
-  };
-  render() {
     return (
       <>
-        {this.getMenuButtons()}<Switch onChange={this.props.studyNewCards} checkedChildren="New Cards" unCheckedChildren="No New Cards" defaultChecked />
+        {buttonRow}
+        <Switch
+          onChange={this.props.studyNewCards}
+          checkedChildren="New Cards"
+          unCheckedChildren="No New Cards"
+          defaultChecked
+        />
+      </>
+    );
+  };
+  render() {
+    if (!this.state.card || !this.props.card) {
+      return (
+        <>
+          {this.getMenuButtons()}
+          <Paragraph className="card">No cards in deck</Paragraph>
+        </>
+      );
+    }
+    return (
+      <>
+        {this.getMenuButtons()}
         <Divider />
         <div className="card" onClick={this.questionClicked}>
           <Question
-            front={this.state.front}
+            front={this.state.card.front}
             editMode={this.state.editMode}
             questionEdited={this.questionEdited}
           />
           {this.state.state === 'answer' || this.state.editMode ? (
             <Answer
-              back={this.state.back}
+              back={this.state.card.back}
               editMode={this.state.editMode}
               card={this.props.card}
               answerEdited={this.answerEdited}

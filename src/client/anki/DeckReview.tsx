@@ -7,7 +7,7 @@ import {
   answerCardResponseType,
 } from '../../server/routes/anki';
 import { Typography } from 'antd';
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 type Props = {
   newDeck: CardType[];
@@ -32,7 +32,7 @@ export default class DeckReview extends React.Component<Props, State> {
       props.learnDeck,
       props.dueDeck
     );
-    
+
     this.state = {
       dueDeck: this.props.dueDeck,
       learnDeck: this.props.learnDeck,
@@ -101,7 +101,11 @@ export default class DeckReview extends React.Component<Props, State> {
         (card) => card.id !== this.state.currentCard?.id
       );
     }
-    if (this.state.currentDeck === 'new' || gotAnswerWrong || this.state.currentCard?.leftToStudy === 2) {
+    if (
+      this.state.currentDeck === 'new' ||
+      gotAnswerWrong ||
+      this.state.currentCard?.leftToStudy === 2
+    ) {
       let currentCard = this.state.currentCard as CardType;
       currentCard.due = null;
       learnCards.push(currentCard);
@@ -111,10 +115,20 @@ export default class DeckReview extends React.Component<Props, State> {
       learnDeck: learnCards,
       newDeck: newCards,
     });
-    this.setNextCard(newCards, learnCards, dueCards, this.state.newCardsEnabled);
+    this.setNextCard(
+      newCards,
+      learnCards,
+      dueCards,
+      this.state.newCardsEnabled
+    );
   };
 
-  setNextCard = (newCards: CardType[], learnCards: CardType[], dueCards: CardType[], newCardsEnabled: boolean) => {
+  setNextCard = (
+    newCards: CardType[],
+    learnCards: CardType[],
+    dueCards: CardType[],
+    newCardsEnabled: boolean
+  ) => {
     const { card, deck } = this.getNextCardAndDeck(
       newCardsEnabled ? newCards : [],
       learnCards,
@@ -158,30 +172,23 @@ export default class DeckReview extends React.Component<Props, State> {
     this.updateServerWithCardAnswered(ease);
   };
   setNewCardsEnabled = (newCardsEnabled: boolean) => {
-    this.setNextCard(this.state.newDeck, this.state.learnDeck, this.state.dueDeck, newCardsEnabled);
-  }
+    this.setNextCard(
+      this.state.newDeck,
+      this.state.learnDeck,
+      this.state.dueDeck,
+      newCardsEnabled
+    );
+  };
   render() {
     return (
       <>
-        {this.state.currentCard === null ? (
-          <>
-            <ButtonRow
-              buttons={[{ text: 'Back', key: 'back' }]}
-              onClick={this.props.onDone}
-            />
-            <Paragraph className='card'>No cards in deck</Paragraph>
-          </>
-        ) : (
-          <>
-            <DeckSummary {...this.state} />
-            <Card
-              card={this.state.currentCard}
-              onBack={this.props.onDone}
-              cardAnswered={this.cardAnswered}
-              studyNewCards={this.setNewCardsEnabled}
-            />
-          </>
-        )}
+        <DeckSummary {...this.state} />
+        <Card
+          card={this.state.currentCard}
+          onBack={this.props.onDone}
+          cardAnswered={this.cardAnswered}
+          studyNewCards={this.setNewCardsEnabled}
+        />
       </>
     );
   }
@@ -194,21 +201,35 @@ type DeckSummaryProps = {
   currentDeck: string;
 };
 export const DeckSummary = (props: DeckSummaryProps) => {
-  //You need to set the key here to force a re-render 
-  //because the underline prop doesn't trigger a re-render 
+  //You need to set the key here to force a re-render
+  //because the underline prop doesn't trigger a re-render
   //if the value is the same in antd
   return (
     <>
       <Text>Due: </Text>
-      <Text key={"new" + (props.currentDeck == 'new') + " " + props.newDeck.length} underline={props.currentDeck == 'new' ? true : false}>
+      <Text
+        key={'new' + (props.currentDeck == 'new') + ' ' + props.newDeck.length}
+        underline={props.currentDeck == 'new' ? true : false}
+      >
         {props.newDeck.length}
       </Text>
       &nbsp;
-      <Text key={"learn" + (props.currentDeck == 'learn') + " " + props.learnDeck.length} underline={props.currentDeck == 'learn' ? true : false}>
+      <Text
+        key={
+          'learn' +
+          (props.currentDeck == 'learn') +
+          ' ' +
+          props.learnDeck.length
+        }
+        underline={props.currentDeck == 'learn' ? true : false}
+      >
         {props.learnDeck.length}
       </Text>
       &nbsp;
-      <Text key={"due" + (props.currentDeck == 'due') + " " + props.dueDeck.length} underline={props.currentDeck == 'due' ? true : false}>
+      <Text
+        key={'due' + (props.currentDeck == 'due') + ' ' + props.dueDeck.length}
+        underline={props.currentDeck == 'due' ? true : false}
+      >
         {props.dueDeck.length}
       </Text>
     </>

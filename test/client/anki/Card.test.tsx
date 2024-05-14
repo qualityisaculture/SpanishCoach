@@ -10,6 +10,7 @@ import {
   element,
   elements,
   button,
+  buttons,
   change,
   switches,
 } from '../../reactTestExtensions';
@@ -35,6 +36,24 @@ describe('Card', () => {
     initialiseDOM();
     defaultProps.studyNewCards.mockClear();
   });
+  const newCardSwitch = () => switches()[0];
+
+  it('should display "No cards in deck", Back and New Cards buttons when no card is passed', () => {
+    render(<Card {...defaultProps} card={null} />);
+    expect(document.body.innerHTML).toContain('No cards in deck');
+    expect(buttons().length).toEqual(2);
+    expect(button('Back')).toBeDefined();
+    expect(newCardSwitch()).not.toBeNull();
+  });
+
+  it('should display back, edit and new cards buttons when card is passed', () => {
+    render(<Card {...defaultProps} />);
+    expect(buttons().length).toEqual(3);
+    expect(button('Back')).toBeDefined();
+    expect(button('Edit')).toBeDefined();
+    expect(newCardSwitch()).not.toBeNull();
+  });
+
   it('should only display the front of the card initially', () => {
     render(<Card {...defaultProps} />);
     expect(document.body.innerHTML).toContain('front1');
@@ -46,11 +65,6 @@ describe('Card', () => {
     click(element('.card'));
     expect(document.body.innerHTML).toContain('back');
     expect(document.body.innerHTML).toContain('front');
-  });
-
-  it('should a back button', () => {
-    render(<Card {...defaultProps} />);
-    expect(button('Back')).not.toBeNull();
   });
 
   it('should call onBack when the back button is clicked', () => {
@@ -87,7 +101,6 @@ describe('Card', () => {
   });
 
   describe('pause new card', () => {
-    const newCardSwitch = () => switches()[0];
     it('should display a new card switched, defaulted to true', () => {
       render(<Card {...defaultProps} />);
       expect(newCardSwitch()).not.toBeNull();
