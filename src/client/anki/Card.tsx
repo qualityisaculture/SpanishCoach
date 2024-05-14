@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card as CardType } from '../../Types';
+import { CardType as CardType } from '../../Types';
 import ButtonRow, { ButtonRowButtonType } from '../components/ButtonRow';
 import ChatModal from '../components/ChatModal';
 import {
@@ -23,10 +23,10 @@ const centerStyle: React.CSSProperties = {
 };
 type Props = {
   card: CardType;
-  edit?: boolean;
   cardAnswered: (ease: 1 | 2 | 3 | 4) => void;
   onBack: () => void;
-  newCards: (newCards: boolean) => void;
+  studyNewCards: (newCards: boolean) => void;
+  edit?: boolean;
 };
 type State = {
   state: 'question' | 'answer';
@@ -151,7 +151,7 @@ export default class Card extends React.Component<Props, State> {
   render() {
     return (
       <>
-        {this.getMenuButtons()}<Switch onChange={this.props.newCards} checkedChildren="New Cards" unCheckedChildren="No New Cards" defaultChecked />
+        {this.getMenuButtons()}<Switch onChange={this.props.studyNewCards} checkedChildren="New Cards" unCheckedChildren="No New Cards" defaultChecked />
         <Divider />
         <div className="card" onClick={this.questionClicked}>
           <Question

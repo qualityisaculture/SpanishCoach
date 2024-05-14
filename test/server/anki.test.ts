@@ -20,11 +20,11 @@ const {
 
 import AnkiClient from '../../src/server/AnkiClient';
 import e from 'express';
-import { Card } from '../../src/Types';
+import { CardType } from '../../src/Types';
 jest.mock('../../src/server/AnkiClient');
 let AnkiClientMock = AnkiClient as jest.MockedClass<typeof AnkiClient>;
 
-let exampleCards: Card[] = [
+let exampleCards: CardType[] = [
   {
     id: 1,
     noteId: 10,
@@ -107,9 +107,9 @@ let exampleCards: Card[] = [
   },
 ];
 
-let exampleNewCards: Card[] = exampleCards.slice(0, 2);
-let exampleLearnCards: Card[] = exampleCards.slice(2, 4);
-let exampleDueCards: Card[] = exampleCards.slice(4, 6);
+let exampleNewCards: CardType[] = exampleCards.slice(0, 2);
+let exampleLearnCards: CardType[] = exampleCards.slice(2, 4);
+let exampleDueCards: CardType[] = exampleCards.slice(4, 6);
 
 function expectFetch(expectedBody) {
   expect(global.fetch).toHaveBeenCalledWith(

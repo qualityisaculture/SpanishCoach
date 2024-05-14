@@ -4,7 +4,7 @@ import {
   TypedResponse as TR,
   TypedRequestQuery as TRQ,
   TypedRequestBody as TRB,
-  Card,
+  CardType,
 } from '../../Types';
 import { DeckStats } from '../AnkiClient';
 
@@ -70,9 +70,9 @@ export type dueCardsRequestType = {
   deck: string;
 };
 export type dueCardsResponseType = {
-  new: Card[];
-  learn: Card[];
-  due: Card[];
+  new: CardType[];
+  learn: CardType[];
+  due: CardType[];
 };
 ankiRoutes.get(
   '/dueCards',
@@ -82,9 +82,9 @@ ankiRoutes.get(
     const learnCards = await ankiClient.getLearnCards(deckName);
     const newCards = await ankiClient.getNewCards(deckName);
 
-    const dueCardsInfo: Card[] = await ankiClient.getCardInfo(dueCards);
-    const learnCardsInfo: Card[] = await ankiClient.getCardInfo(learnCards);
-    const newCardsInfo: Card[] = await ankiClient.getCardInfo(newCards);
+    const dueCardsInfo: CardType[] = await ankiClient.getCardInfo(dueCards);
+    const learnCardsInfo: CardType[] = await ankiClient.getCardInfo(learnCards);
+    const newCardsInfo: CardType[] = await ankiClient.getCardInfo(newCards);
 
     res.json({ new: newCardsInfo, learn: learnCardsInfo, due: dueCardsInfo });
   }
@@ -97,7 +97,7 @@ export type answerCardRequestType = {
 export type answerCardResponseType = {
   success: boolean;
   message: string | null;
-  card: Card | null;
+  card: CardType | null;
 };
 ankiRoutes.post(
   '/answerCard',

@@ -3,19 +3,18 @@
  */
 
 import React from 'react';
+import { act } from 'react-dom/test-utils';
 import {
   render,
   initialiseDOM,
   element,
-  elements,
   click,
   button,
-  switches,
 } from '../../reactTestExtensions';
 import DeckReview, { DeckSummary } from '../../../src/client/anki/DeckReview';
 import {
   beforeAnyCardsDue,
-  card1,
+  dueCard1,
   dueDeck,
   learnCard,
   learnCard2,
@@ -24,17 +23,37 @@ import {
   newDeck,
   oneSecondAfterLearnCard,
 } from '../../builders/cards';
-import { Card } from '../../../src/Types';
+import { CardType } from '../../../src/Types';
 import FetchMockHandler from '../../server/FetchMockHandler';
-import { cli } from 'webpack';
 import { answerCardResponseType } from '../../../src/server/routes/anki';
+import Card from '../../../src/client/anki/Card';
+const mockCard = Card as jest.MockedClass<typeof Card>;
+jest.mock('../../../src/client/anki/Card', () => {
+  return jest.fn().mockReturnValue(<div id="card"></div>);
+});
 
 const fetchMockHandler = new FetchMockHandler();
 
+function answerEasy() {
+  let cardAnswered = mockCard.mock.calls[0][0].cardAnswered;
+  act(() => {
+    cardAnswered(4);
+  });
+}
+function expectCardToBe(card: CardType) {
+  expect(mockCard).toHaveBeenLastCalledWith(
+    {
+      card: card,
+      cardAnswered: expect.any(Function),
+      studyNewCards: expect.any(Function),
+      onBack: expect.any(Function),
+    },
+    expect.any(Object)
+  );
+}
+
 describe('DeckReview', () => {
-  const front = () => elements('h4')[0];
-  const back = () => elements('h4')[1];
-  let emptyDeck: Card[] = [];
+  let emptyDeck: CardType[] = [];
   const defaultProps = {
     dueDeck: emptyDeck,
     newDeck: emptyDeck,
@@ -49,6 +68,7 @@ describe('DeckReview', () => {
   beforeEach(() => {
     initialiseDOM();
     fetchMock = fetchMockHandler.beforeEach();
+    mockCard.mockClear();
     jest.useFakeTimers();
   });
   afterEach(async () => {
@@ -74,8 +94,7 @@ describe('DeckReview', () => {
 
   it('should save the answer when button is clicked', () => {
     render(<DeckReview {...defaultProps} dueDeck={dueDeck} />);
-    click(element('.card'));
-    click(button('Easy'));
+    answerEasy();
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith('/answerCard', {
       method: 'POST',
@@ -90,9 +109,9 @@ describe('DeckReview', () => {
     it('should display the number of cards in each deck', () => {
       render(
         <DeckSummary
-          newDeck={[card1, card1]}
-          learnDeck={[card1, card1, card1]}
-          dueDeck={[card1]}
+          newDeck={[dueCard1, dueCard1]}
+          learnDeck={[dueCard1, dueCard1, dueCard1]}
+          dueDeck={[dueCard1]}
           currentDeck={'due'}
         />
       );
@@ -102,9 +121,9 @@ describe('DeckReview', () => {
     it('should underline the new deck', () => {
       render(
         <DeckSummary
-          newDeck={[card1, card1]}
-          learnDeck={[card1, card1, card1]}
-          dueDeck={[card1]}
+          newDeck={[dueCard1, dueCard1]}
+          learnDeck={[dueCard1, dueCard1, dueCard1]}
+          dueDeck={[dueCard1]}
           currentDeck={'new'}
         />
       );
@@ -114,9 +133,9 @@ describe('DeckReview', () => {
     it('should underline the learn deck', () => {
       render(
         <DeckSummary
-          newDeck={[card1, card1]}
-          learnDeck={[card1, card1, card1]}
-          dueDeck={[card1]}
+          newDeck={[dueCard1, dueCard1]}
+          learnDeck={[dueCard1, dueCard1, dueCard1]}
+          dueDeck={[dueCard1]}
           currentDeck={'learn'}
         />
       );
@@ -126,9 +145,9 @@ describe('DeckReview', () => {
     it('should underline the due deck', () => {
       render(
         <DeckSummary
-          newDeck={[card1, card1]}
-          learnDeck={[card1, card1, card1]}
-          dueDeck={[card1]}
+          newDeck={[dueCard1, dueCard1]}
+          learnDeck={[dueCard1, dueCard1, dueCard1]}
+          dueDeck={[dueCard1]}
           currentDeck={'due'}
         />
       );
@@ -149,49 +168,46 @@ describe('DeckReview', () => {
     });
     it('should display the first card in the due deck', () => {
       render(<DeckReview {...algorithmProps} />);
-      expect(document.body.innerHTML).toContain(dueDeck[0].front);
+      expectCardToBe(dueDeck[0]);
     });
 
     it('should display the first card in the new deck if the due deck is empty', () => {
       render(<DeckReview {...algorithmProps} dueDeck={[]} />);
-      expect(document.body.innerHTML).toContain(newDeck[0].front);
+      expectCardToBe(newDeck[0]);
     });
 
     it('should display the soonest card in the learn deck if the due and new decks are empty', () => {
       render(<DeckReview {...algorithmProps} dueDeck={[]} newDeck={[]} />);
-      expect(document.body.innerHTML).toContain(learnDeck[0].front);
+      expectCardToBe(learnDeck[0]);
     });
 
     it('should display the soonest expired learn card regardless of other decks', () => {
       jest.setSystemTime(oneSecondAfterLearnCard); //Sun Jan 07 2024 13:35:44
       render(<DeckReview {...algorithmProps} />);
-      expect(document.body.innerHTML).toContain(learnDeck[0].front);
+      expectCardToBe(learnDeck[0]);
     });
 
     it('should display the next due card when answer button is clicked', () => {
       render(<DeckReview {...algorithmProps} />);
-      click(element('.card'));
-      click(button('Easy'));
-      expect(document.body.innerHTML).toContain(dueDeck[1].front);
+      answerEasy();
+      expectCardToBe(dueDeck[1]);
     });
 
     describe('next due date expired will be shown', () => {
       it('will show after due deck card is answered', () => {
         render(<DeckReview {...algorithmProps} />);
-        expect(document.body.innerHTML).toContain(dueDeck[0].front);
+        expectCardToBe(dueDeck[0]);
         jest.setSystemTime(oneSecondAfterLearnCard);
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(learnDeck[0].front);
+        answerEasy();
+        expectCardToBe(learnDeck[0]);
       });
 
       it('will show after new deck card is answered', () => {
         render(<DeckReview {...algorithmProps} dueDeck={[]} />);
-        expect(document.body.innerHTML).toContain(newDeck[0].front);
+        expectCardToBe(newDeck[0]);
         jest.setSystemTime(oneSecondAfterLearnCard);
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(learnDeck[0].front);
+        answerEasy();
+        expectCardToBe(learnDeck[0]);
       });
 
       it('will show the next due card even if it isnt next in the deck', () => {
@@ -203,11 +219,10 @@ describe('DeckReview', () => {
             learnDeck={[learnCard2, learnCard2, learnCard]}
           />
         );
-        expect(document.body.innerHTML).toContain(learnCard2.front);
+        expectCardToBe(learnCard2);
         jest.setSystemTime(oneSecondAfterLearnCard);
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(learnCard.front);
+        answerEasy();
+        expectCardToBe(learnCard);
       });
     });
 
@@ -215,9 +230,8 @@ describe('DeckReview', () => {
       //These all assume there are no expired due cards
       it('should display the first learn card when final new card is answered', () => {
         render(<DeckReview {...algorithmProps} dueDeck={[]} />);
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(learnDeck[0].front);
+        answerEasy();
+        expectCardToBe(learnDeck[0]);
       });
 
       it('should put a successful new card in the learn deck before server responds', async () => {
@@ -229,14 +243,13 @@ describe('DeckReview', () => {
             learnDeck={[]}
           />
         );
-        click(element('.card'));
-        click(button('Easy'));
+        answerEasy();
         let successResponse: answerCardResponseType = {
           success: true,
           message: null,
           card: learnDeck[0],
         };
-        expect(document.body.innerHTML).toContain(newDeck[0].front);
+        expectCardToBe(newDeck[0]);
         await fetchMockHandler.resolvePromise(0, successResponse);
       });
 
@@ -249,10 +262,10 @@ describe('DeckReview', () => {
             learnDeck={dc([learnCard2, learnCard2, learnCard2])}
           />
         );
-        click(element('.card'));
-        click(button('Easy'));
+        expectCardToBe(newDeck[0]);
+        answerEasy();
 
-        let newCardWithDueTime: Card = JSON.parse(JSON.stringify(newCard));
+        let newCardWithDueTime: CardType = JSON.parse(JSON.stringify(newCard));
         newCardWithDueTime.due = learnCard.due;
         let successResponse: answerCardResponseType = {
           success: true,
@@ -260,20 +273,18 @@ describe('DeckReview', () => {
           card: newCardWithDueTime,
         };
         await fetchMockHandler.resolvePromise(0, successResponse);
-        expect(document.body.innerHTML).toContain(learnCard2.front);
+        expectCardToBe(learnCard2);
 
         jest.setSystemTime(oneSecondAfterLearnCard);
-        click(element('.card'));
-        click(button('Easy'));
-        expect(front()).toContainText(newDeck[0].front);
+        answerEasy();
+        expectCardToBe(newCardWithDueTime);
       });
     });
 
     describe('answer learn cards', () => {
       it('should display message when final card answered', () => {
         render(<DeckReview {...algorithmProps} dueDeck={[]} newDeck={[]} />);
-        click(element('.card'));
-        click(button('Easy'));
+        answerEasy();
         expect(document.body.innerHTML).toContain('No cards in deck');
       });
 
@@ -286,8 +297,7 @@ describe('DeckReview', () => {
             newDeck={[]}
           />
         );
-        click(element('.card'));
-        click(button('Again'));
+        answerEasy();
         let card = JSON.parse(JSON.stringify(learnDeck[0]));
         let failResponse: answerCardResponseType = {
           success: true,
@@ -295,10 +305,10 @@ describe('DeckReview', () => {
           card: card,
         };
         await fetchMockHandler.resolvePromise(0, failResponse);
-        expect(document.body.innerHTML).toContain(learnDeck[0].front);
+        expectCardToBe(learnDeck[0]);
       });
 
-      it('should put the successful learn card in the due deck before server responds when left is 2', async () => {
+      it('should put the successful learn card in the due deck(with the due time reset) before server responds when "left" is 2', async () => {
         render(
           <DeckReview
             {...algorithmProps}
@@ -307,20 +317,17 @@ describe('DeckReview', () => {
             newDeck={[]}
           />
         );
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(learnCard2.front);
+        answerEasy();
+        expectCardToBe({ ...learnCard2, due: null });
       });
     });
 
     describe('answer due cards', () => {
       it('should display the first new card when final due card is answered', () => {
         render(<DeckReview {...algorithmProps} />);
-        click(element('.card'));
-        click(button('Easy'));
-        click(element('.card'));
-        click(button('Easy'));
-        expect(document.body.innerHTML).toContain(newDeck[0].front);
+        answerEasy();
+        answerEasy();
+        expectCardToBe(newDeck[0]);
       });
     });
 
@@ -335,50 +342,51 @@ describe('DeckReview', () => {
           learnDeck={[]}
         />
       );
-      click(element('.card'));
-      click(button('Again'));
+      answerEasy();
       let failResponse: answerCardResponseType = {
         success: true,
         message: null,
         card: learnDeck[0],
       };
       await fetchMockHandler.resolvePromise(0, failResponse);
-      expect(document.body.innerHTML).toContain(due[1].front);
+      expectCardToBe(due[1]);
 
       jest.setSystemTime(oneSecondAfterLearnCard);
-      click(element('.card'));
-      click(button('Easy'));
-      expect(front()).toContainText(learnDeck[0].front);
+      answerEasy();
+      expectCardToBe(learnDeck[0]);
     });
 
     describe('new cards disabled', () => {
-      it.only('should not show new cards when newCards is called', () => {
-        render(
-          <DeckReview
-            {...algorithmProps}
-            newDeck={dc(newDeck)}
-            dueDeck={[]}
-            learnDeck={[]}
-          />
-        );
-        expect(document.body.innerHTML).toContain(newDeck[0].front);
-        click(switches()[0]);
+      function setStudyNewCardsTo(enabled: boolean) {
+        act(() => {
+          mockCard.mock.calls[0][0].studyNewCards(enabled);
+        });
+      }
+      let defaultNewCardsProps = {
+        newDeck: [],
+        learnDeck: [],
+        dueDeck: [],
+        onDone: jest.fn(),
+      };
+      it('should not show new cards when newCards is called', () => {
+        render(<DeckReview {...defaultNewCardsProps} newDeck={[newCard]} />);
+        expectCardToBe(newCard);
+        expect(document.body.innerHTML).toContain('<div id="card"></div>');
+        setStudyNewCardsTo(false);
         expect(document.body.innerHTML).toContain('No cards in deck');
       });
 
-      it.only('should skip new card when newCards is called', () => {
+      it('should skip new card when newCards is called', () => {
         render(
           <DeckReview
-            {...algorithmProps}
-            dueDeck={dc(dueDeck.slice(0, 1))}
-            newDeck={dc(newDeck)}
-            learnDeck={[]}
+            {...defaultNewCardsProps}
+            dueDeck={[dueCard1]}
+            newDeck={[newCard]}
           />
         );
-        click(switches()[0]);
-        expect(document.body.innerHTML).toContain(dueDeck[0].front);
-        click(element('.card'));
-        click(button('Easy'));
+        setStudyNewCardsTo(false);
+        expectCardToBe(dueCard1);
+        answerEasy();
         expect(document.body.innerHTML).toContain('No cards in deck');
       });
     });

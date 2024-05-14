@@ -10,7 +10,7 @@ import FetchMockHandler from './FetchMockHandler';
 const fetchMock = new FetchMockHandler();
 
 import { decksWithStats, exampleCard, exampleNewCard, exampleNewFailedLearnCard, exampleNewSuccessLearnCard } from '../builders/anki';
-import { Card } from '../../src/Types'
+import { CardType } from '../../src/Types'
 import { newCard } from '../builders/cards';
 
 describe('AnkiClient', () => {

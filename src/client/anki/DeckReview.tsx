@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card as CardType } from '../../Types';
+import { CardType as CardType } from '../../Types';
 import Card from './Card';
 import ButtonRow from '../components/ButtonRow';
 import {
@@ -175,10 +175,10 @@ export default class DeckReview extends React.Component<Props, State> {
           <>
             <DeckSummary {...this.state} />
             <Card
-              newCards={this.setNewCardsEnabled}
+              card={this.state.currentCard}
               onBack={this.props.onDone}
               cardAnswered={this.cardAnswered}
-              card={this.state.currentCard}
+              studyNewCards={this.setNewCardsEnabled}
             />
           </>
         )}

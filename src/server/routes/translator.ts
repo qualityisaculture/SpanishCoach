@@ -9,7 +9,7 @@ import {
   TypedResponse as TR,
   TypedRequestQuery as TRQ,
   TypedRequestBody as TRB,
-  Card,
+  CardType,
 } from '../../Types';
 
 export type translateRequestType = {

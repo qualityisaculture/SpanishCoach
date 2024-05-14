@@ -1,6 +1,6 @@
 import e from 'express';
-import { Card } from '../../src/Types'
-export const card1: Card = {
+import { CardType } from '../../src/Types'
+export const dueCard1: CardType = {
   id: 1,
   noteId: 10,
   front: 'front1',
@@ -14,7 +14,7 @@ export const card1: Card = {
   leftToStudy: 0
 };
 
-export const card2: Card = {
+export const dueCard2: CardType = {
   id: 2,
   noteId: 11,
   front: 'front2',
@@ -28,7 +28,7 @@ export const card2: Card = {
   leftToStudy: 0
 };
 
-export const newCard: Card = {
+export const newCard: CardType = {
   id: 3,
   noteId: 12,
   front: 'front new',
@@ -44,7 +44,7 @@ export const newCard: Card = {
 
 export const beforeAnyCardsDue: number = 1704634543000; //Sun Jan 07 2024 13:35:43
 export const oneSecondAfterLearnCard: number = 1704634545000; //Sun Jan 07 2024 13:35:45
-export const learnCard: Card = {
+export const learnCard: CardType = {
   id: 4,
   noteId: 13,
   front: 'front learn',
@@ -58,7 +58,7 @@ export const learnCard: Card = {
   leftToStudy: 1
 };
 
-export const learnCard2: Card = {
+export const learnCard2: CardType = {
   id: 5,
   noteId: 14,
   front: 'front learn',
@@ -72,6 +72,6 @@ export const learnCard2: Card = {
   leftToStudy: 2
 };
 
-export const dueDeck = [card1, card2];
+export const dueDeck = [dueCard1, dueCard2];
 export const newDeck = [newCard];
 export const learnDeck = [learnCard];
