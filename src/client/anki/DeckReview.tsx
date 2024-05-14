@@ -10,40 +10,43 @@ import { Typography } from 'antd';
 const { Text, Paragraph } = Typography;
 
 type Props = {
-  due: CardType[];
-  learn: CardType[];
-  new: CardType[];
+  newDeck: CardType[];
+  learnDeck: CardType[];
+  dueDeck: CardType[];
   onDone: () => void;
 };
 type State = {
-  dueDeck: CardType[];
-  learnDeck: CardType[];
   newDeck: CardType[];
+  learnDeck: CardType[];
+  dueDeck: CardType[];
   currentCard: CardType | null;
   currentDeck: string;
+  newCardsEnabled: boolean;
 };
 
 export default class DeckReview extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const { card, deck } = this.getNextCardAndDeck(
-      props.due,
-      props.learn,
-      props.new
+      props.newDeck,
+      props.learnDeck,
+      props.dueDeck
     );
+    
     this.state = {
-      dueDeck: this.props.due,
-      learnDeck: this.props.learn,
-      newDeck: this.props.new,
+      dueDeck: this.props.dueDeck,
+      learnDeck: this.props.learnDeck,
+      newDeck: this.props.newDeck,
       currentCard: card,
       currentDeck: deck,
+      newCardsEnabled: true,
     };
   }
 
   getNextCardAndDeck = (
-    dueCards: CardType[],
+    newCards: CardType[],
     learnCards: CardType[],
-    newCards: CardType[]
+    dueCards: CardType[]
   ): { card: CardType | null; deck: string } => {
     let mostExpired = this.getMostExpiredCard(learnCards);
     if (mostExpired) {
@@ -103,17 +106,21 @@ export default class DeckReview extends React.Component<Props, State> {
       currentCard.due = null;
       learnCards.push(currentCard);
     }
-    const { card, deck } = this.getNextCardAndDeck(
-      dueCards,
-      learnCards,
-      newCards
-    );
-    this.setState({ currentCard: card, currentDeck: deck });
     this.setState({
       dueDeck: dueCards,
       learnDeck: learnCards,
       newDeck: newCards,
     });
+    this.setNextCard(newCards, learnCards, dueCards, this.state.newCardsEnabled);
+  };
+
+  setNextCard = (newCards: CardType[], learnCards: CardType[], dueCards: CardType[], newCardsEnabled: boolean) => {
+    const { card, deck } = this.getNextCardAndDeck(
+      newCardsEnabled ? newCards : [],
+      learnCards,
+      dueCards
+    );
+    this.setState({ currentCard: card, currentDeck: deck, newCardsEnabled });
   };
 
   updateServerWithCardAnswered = async (ease: 1 | 2 | 3 | 4) => {
@@ -150,6 +157,9 @@ export default class DeckReview extends React.Component<Props, State> {
     this.updateCard(ease === 1); //TODO: this is wrong as sometimes cards are learn and need to be studied again
     this.updateServerWithCardAnswered(ease);
   };
+  setNewCardsEnabled = (newCardsEnabled: boolean) => {
+    this.setNextCard(this.state.newDeck, this.state.learnDeck, this.state.dueDeck, newCardsEnabled);
+  }
   render() {
     return (
       <>
@@ -165,6 +175,7 @@ export default class DeckReview extends React.Component<Props, State> {
           <>
             <DeckSummary {...this.state} />
             <Card
+              newCards={this.setNewCardsEnabled}
               onBack={this.props.onDone}
               cardAnswered={this.cardAnswered}
               card={this.state.currentCard}

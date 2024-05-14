@@ -29,6 +29,9 @@ export const element = (query) => {
 export const elements = (query) => {
   return Array.from(document.querySelectorAll(query));
 };
+export const switches = () => {
+  return elements('.ant-switch');
+}
 export const button = (buttonText?: string) => {
   let buttons = elements('button');
   if (!buttonText) {

@@ -11,6 +11,7 @@ import {
   elements,
   button,
   change,
+  switches,
 } from '../../reactTestExtensions';
 import Card from '../../../src/client/anki/Card';
 import { Card as CardType } from '../../../src/Types';
@@ -26,11 +27,13 @@ describe('Card', () => {
     card: card1,
     cardAnswered: jest.fn(),
     onBack: jest.fn(),
+    newCards: jest.fn(),
   };
   const front = () => elements('h4')[0] ? elements('h4')[0] : null;
   const back = () => elements('h4')[1]? elements('h4')[1] : null;
   beforeEach(() => {
     initialiseDOM();
+    defaultProps.newCards.mockClear();
   });
   it('should only display the front of the card initially', () => {
     render(<Card {...defaultProps} />);
@@ -81,6 +84,31 @@ describe('Card', () => {
     render(<Card {...defaultProps} card={card2} />);
     expect(front()).toContainText(card2.front);
     expect(back()).toBeNull();
+  });
+
+  describe('pause new card', () => {
+    const newCardSwitch = () => switches()[0];
+    it('should display a new card switched, defaulted to true', () => {
+      render(<Card {...defaultProps} />);
+      expect(newCardSwitch()).not.toBeNull();
+      expect(newCardSwitch().getAttribute('aria-checked')).toBe("true");
+    });
+
+    it('should call newCards when the switch is tapped', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      expect(defaultProps.newCards).toHaveBeenCalledTimes(1);
+      expect(defaultProps.newCards).toHaveBeenCalledWith(false, expect.anything());
+    });
+
+    it('should call newCards with true when the switch is tapped twice', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      click(newCardSwitch());
+      expect(defaultProps.newCards).toHaveBeenCalledTimes(2);
+      expect(defaultProps.newCards).toHaveBeenCalledWith(false, expect.anything());
+      expect(defaultProps.newCards).toHaveBeenCalledWith(true, expect.anything());
+    });
   });
 
   describe('edit mode', () => {

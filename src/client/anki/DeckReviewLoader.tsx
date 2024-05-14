@@ -35,6 +35,6 @@ export default class DeckReviewLoader extends React.Component<Props, State>{
     if (this.state.due === null || this.state.learn === null || this.state.new === null) {
       return <Paragraph>Loading...</Paragraph>;
     }
-    return <DeckReview onDone={this.props.onDone} due={this.state.due} learn={this.state.learn} new={this.state.new}/>;
+    return <DeckReview onDone={this.props.onDone} dueDeck={this.state.due} learnDeck={this.state.learn} newDeck={this.state.new}/>;
   }
 }

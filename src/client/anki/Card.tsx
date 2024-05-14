@@ -8,7 +8,7 @@ import {
 } from '../../server/routes/anki';
 
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Divider, FloatButton } from 'antd';
+import { Divider, FloatButton, Switch } from 'antd';
 import EditComponent from '../components/EditComponent';
 import { red, orange, green, blue } from '@ant-design/colors';
 
@@ -26,6 +26,7 @@ type Props = {
   edit?: boolean;
   cardAnswered: (ease: 1 | 2 | 3 | 4) => void;
   onBack: () => void;
+  newCards: (newCards: boolean) => void;
 };
 type State = {
   state: 'question' | 'answer';
@@ -52,11 +53,11 @@ export default class Card extends React.Component<Props, State> {
       isModalOpen: false,
     };
   }
-  componentDidUpdate(
+  componentDidUpdate = (
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
     snapshot?: any
-  ): void {
+  ): void => {
     if (prevProps.card !== this.props.card) {
       this.setState({
         state: 'question',
@@ -150,7 +151,7 @@ export default class Card extends React.Component<Props, State> {
   render() {
     return (
       <>
-        {this.getMenuButtons()}
+        {this.getMenuButtons()}<Switch onChange={this.props.newCards} checkedChildren="New Cards" unCheckedChildren="No New Cards" defaultChecked />
         <Divider />
         <div className="card" onClick={this.questionClicked}>
           <Question
