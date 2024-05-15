@@ -164,6 +164,7 @@ export default class Card extends React.Component<Props, State> {
         checkedChildren="New Cards"
         unCheckedChildren="No New Cards"
         defaultChecked
+        id="new-card-switch"
       />
     );
     const backButton = { text: 'Back', key: 'back', id: 'back' };
@@ -192,12 +193,7 @@ export default class Card extends React.Component<Props, State> {
     return (
       <>
         {buttonRow}
-        <Switch
-          onChange={this.props.studyNewCards}
-          checkedChildren="New Cards"
-          unCheckedChildren="No New Cards"
-          defaultChecked
-        />
+        {newCardsSwitch}
       </>
     );
   };
