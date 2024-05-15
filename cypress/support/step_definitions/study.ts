@@ -75,6 +75,9 @@ When('I tap {string}', (buttonString) => {
     chatModal.tapSend();
   } else if (buttonString === 'close') {
     chatModal.tapClose();
+  } else if (buttonString === 'new cards') {
+    console.log('tap new cards');
+    studyCardPage.tapNewCardSwitch();
   } else if (buttonString === 'easy') {
     studyCardPage.tapAnswerEasy();
   } else {
