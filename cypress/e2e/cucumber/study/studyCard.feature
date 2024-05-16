@@ -87,4 +87,44 @@ Feature: Study Card
     When I tap the card
     And I tap "easy"
     Then I should see "No cards in deck"
+
+  Scenario: When you disable new cards, they are not shown
+    Given I am on the study menu
+    When I tap a deck with the following cards:
+      | new | due | learn |
+      | 1   | 0   | 0     |
+    Then I should see the question "new card front 1"
+    When I tap "new cards"
+    Then I should see "No cards in deck"
+
+  Scenario: When you reenable new cards, they are shown again
+    Given I am on the study menu
+    When I tap a deck with the following cards:
+      | new | due | learn |
+      | 1   | 0   | 0     |
+    Then I should see the question "new card front 1"
+    When I tap "new cards"
+    Then I should see "No cards in deck"
+    When I tap "new cards"
+    Then I should see the question "new card front 1"
+
+    Scenario: When you disable new cards, the next card should be shown
+    Given I am on the study menu
+    When I tap a deck with the following cards:
+      | new | due | learn |
+      | 1   | 0   | 1     |
+    Then I should see the question "new card front 1"
+    When I tap "new cards"
+    Then I should see the question "learn card front 1"
+
+    Scenario: When you reenable new cards, the next new card should be shown if it is due
+    Given I am on the study menu
+    When I tap a deck with the following cards:
+      | new | due | learn |
+      | 1   | 0   | 1     |
+    Then I should see the question "new card front 1"
+    When I tap "new cards"
+    Then I should see the question "learn card front 1"
+    When I tap "new cards"
+    Then I should see the question "new card front 1"
   

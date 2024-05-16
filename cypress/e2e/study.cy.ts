@@ -3,6 +3,7 @@ import StudyMenu from '../pages/StudyMenu.page';
 import StudyCard from '../pages/StudyCard.page';
 import EditComponent from './components/Edit.component';
 import ChatModal from './components/ChatModal.component';
+import {newCard, learnCard} from '../../test/builders/cards';
 
 describe('Study', () => {
   let studyMenuPage: StudyMenu;
@@ -198,4 +199,54 @@ describe('Study', () => {
       });
     });
   });
+
+
+  describe('Disable new cards', () => {
+    let studyCardPage: StudyCard;
+    beforeEach(() => {
+    });
+    it('should not display new cards when new cards are disabled', () => {
+      studyCardPage = new StudyCard({
+        "new": [newCard],
+        "due": [],
+        "learn": [],
+      });
+      studyMenuPage.tapDeck('deck1');
+      studyCardPage.getCardFront().contains('front new');
+      studyCardPage.tapNewCardSwitch();
+      studyCardPage.getCard().contains('No cards in deck');
+    });
+
+    it('should display new cards when new cards are enabled', () => {
+      studyCardPage = new StudyCard({
+        "new": [newCard],
+        "due": [],
+        "learn": [],
+      });
+      studyMenuPage.tapDeck('deck1');
+      studyCardPage.getCardFront().contains('front new');
+      studyCardPage.tapNewCardSwitch();
+      studyCardPage.getCard().contains('No cards in deck');
+      studyCardPage.tapNewCardSwitch();
+      studyCardPage.getCardFront().contains('front new');
+    });
+
+    it('should display the next card when new card is disabled and show new card again when reenabled', () => {
+
+      studyCardPage = new StudyCard({
+        "new": [newCard],
+        "due": [],
+        "learn": [learnCard],
+      });
+      studyMenuPage.tapDeck('deck1');
+      studyCardPage.getCardFront().contains('front learn');
+      studyCardPage.tapCard();
+      studyCardPage.tapAnswerAgain();
+      studyCardPage.getCardFront().contains('front new');
+      studyCardPage.tapNewCardSwitch();
+      studyCardPage.getCardFront().contains('front learn');
+      studyCardPage.tapNewCardSwitch();
+      studyCardPage.getCardFront().contains('front new');
+    })
+  })
 });
