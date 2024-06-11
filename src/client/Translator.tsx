@@ -160,6 +160,10 @@ class Translator extends React.Component<Props, State> {
           <ChatDialog
             initialMessages={[
               {
+                message: this.state.input,
+                type: 'human',
+              },
+              {
                 message: this.state.complexOutput.longDescription,
                 type: 'bot',
               },
@@ -173,7 +177,7 @@ class Translator extends React.Component<Props, State> {
       {
         key: 'translation',
         label: output,
-        children: <div>{complexOutput}</div>
+        children: <div>{complexOutput}</div>,
       },
     ];
     return (
@@ -209,7 +213,7 @@ class Translator extends React.Component<Props, State> {
           size="large"
           ghost
           items={items}
-          style={{maxHeight: '60%', overflow: 'scroll'}}
+          style={{ maxHeight: '60%', overflow: 'scroll' }}
           expandIconPosition={'end'}
           activeKey={complexActiveKeys}
           onChange={this.requestComplex}

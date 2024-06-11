@@ -387,12 +387,18 @@ describe('Translator', () => {
           longDescription: 'long description',
         })
       );
-      let expectedMessage: chatMessageType = {
-        message: 'long description',
-        type: 'bot',
-      };
+      let expectedMessages: chatMessageType[] = [
+        {
+          message: 'Hola',
+          type: 'human',
+        },
+        {
+          message: `long description`,
+          type: 'bot',
+        },
+      ];
       expect(mockChatDialog).toHaveBeenCalledWith(
-        { initialMessages: [expectedMessage] },
+        { initialMessages: expectedMessages },
         expect.anything()
       );
       expect(expandContent()).toContainText('Mock Chat Dialog');
