@@ -24,7 +24,7 @@ export type DecksWithStatsResponse = {
   error: null;
 };
 
-export type Card = {
+export type CardType = {
   id: number;
   noteId: number;
   front: string;
@@ -39,5 +39,5 @@ export type Card = {
 }
 
 export type Cards = {
-  cards: Card[];
+  cards: CardType[];
 }

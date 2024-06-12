@@ -23,7 +23,7 @@ export default class EditComponent {
 
   async formatButton(index: number) {
     return this.page.locator(
-      '.edit-component:nth-of-type(' + this.index + ') > div > button:nth-of-type(' + index + ')'
+      '.edit-component:nth-of-type(' + this.index + ') > span > button:nth-of-type(' + index + ')'
     );
   }
 

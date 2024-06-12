@@ -10,12 +10,14 @@ import {
   element,
   elements,
   button,
+  buttons,
   change,
+  switches,
 } from '../../reactTestExtensions';
 import Card from '../../../src/client/anki/Card';
-import { Card as CardType } from '../../../src/Types';
+import { CardType as CardType } from '../../../src/Types';
 import e from 'express';
-import { card1, card2 } from '../../builders/cards';
+import { dueCard1, dueCard2 } from '../../builders/cards';
 import FetchMockHandler from '../../server/FetchMockHandler';
 import { act } from 'react-dom/test-utils';
 import { updateCardResponseType } from '../../../src/server/routes/anki';
@@ -23,15 +25,35 @@ import { cli } from 'webpack';
 
 describe('Card', () => {
   const defaultProps = {
-    card: card1,
+    card: dueCard1,
     cardAnswered: jest.fn(),
     onBack: jest.fn(),
+    studyNewCards: jest.fn(),
   };
   const front = () => elements('h4')[0] ? elements('h4')[0] : null;
   const back = () => elements('h4')[1]? elements('h4')[1] : null;
   beforeEach(() => {
     initialiseDOM();
+    defaultProps.studyNewCards.mockClear();
   });
+  const newCardSwitch = () => switches()[0];
+
+  it('should display "No cards in deck", Back and New Cards buttons when no card is passed', () => {
+    render(<Card {...defaultProps} card={null} />);
+    expect(document.body.innerHTML).toContain('No cards in deck');
+    expect(buttons().length).toEqual(2);
+    expect(button('Back')).toBeDefined();
+    expect(newCardSwitch()).not.toBeNull();
+  });
+
+  it('should display back, edit and new cards buttons when card is passed', () => {
+    render(<Card {...defaultProps} />);
+    expect(buttons().length).toEqual(3);
+    expect(button('Back')).toBeDefined();
+    expect(button('Edit')).toBeDefined();
+    expect(newCardSwitch()).not.toBeNull();
+  });
+
   it('should only display the front of the card initially', () => {
     render(<Card {...defaultProps} />);
     expect(document.body.innerHTML).toContain('front1');
@@ -43,11 +65,6 @@ describe('Card', () => {
     click(element('.card'));
     expect(document.body.innerHTML).toContain('back');
     expect(document.body.innerHTML).toContain('front');
-  });
-
-  it('should a back button', () => {
-    render(<Card {...defaultProps} />);
-    expect(button('Back')).not.toBeNull();
   });
 
   it('should call onBack when the back button is clicked', () => {
@@ -76,11 +93,35 @@ describe('Card', () => {
   it('should display the front of the next card when props are changed', () => {
     render(<Card {...defaultProps} />);
     click(element('.card'));
-    expect(front()).toContainText(card1.front);
-    expect(back()).toContainText(card1.back);
-    render(<Card {...defaultProps} card={card2} />);
-    expect(front()).toContainText(card2.front);
+    expect(front()).toContainText(dueCard1.front);
+    expect(back()).toContainText(dueCard1.back);
+    render(<Card {...defaultProps} card={dueCard2} />);
+    expect(front()).toContainText(dueCard2.front);
     expect(back()).toBeNull();
+  });
+
+  describe('pause new card', () => {
+    it('should display a new card switched, defaulted to true', () => {
+      render(<Card {...defaultProps} />);
+      expect(newCardSwitch()).not.toBeNull();
+      expect(newCardSwitch().getAttribute('aria-checked')).toBe("true");
+    });
+
+    it('should call newCards when the switch is tapped', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(1);
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(false, expect.anything());
+    });
+
+    it('should call newCards with true when the switch is tapped twice', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      click(newCardSwitch());
+      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(2);
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(false, expect.anything());
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(true, expect.anything());
+    });
   });
 
   describe('edit mode', () => {
@@ -115,7 +156,7 @@ describe('Card', () => {
       render(<Card {...defaultProps} edit />);
       click(button('Edit'));
       click(button('Cancel'));
-      expect(front()).toContainText(card1.front);
+      expect(front()).toContainText(dueCard1.front);
       expect(back()).toBeNull();
     });
 
@@ -124,7 +165,7 @@ describe('Card', () => {
       click(button('Edit'));
       change(elements('input')[0], 'new info');
       click(button('Cancel'));
-      expect(front()).toContainText(card1.front);
+      expect(front()).toContainText(dueCard1.front);
     });
 
     it('should set back the value to the original value when cancel is clicked after card has been updated', () => {
@@ -174,9 +215,9 @@ describe('Card', () => {
       expect(fetch).toHaveBeenCalledWith('/updateCard', {
         method: 'POST',
         body: JSON.stringify({
-          cardId: card1.noteId,
+          cardId: dueCard1.noteId,
           front: 'new front',
-          back: card1.back,
+          back: dueCard1.back,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -210,7 +251,7 @@ describe('Card', () => {
       };
       await fetchMockHandler.resolvePromise(0, errorResponse);
       expect(elements('input').length).toEqual(0);
-      expect(front()).toContainText(card1.front);
+      expect(front()).toContainText(dueCard1.front);
       expect(back()).toBeNull();
     });
 
@@ -277,7 +318,7 @@ describe('Card', () => {
         message: 'error',
       };
       await fetchMockHandler.resolvePromise(0, failureResponse);
-      expect(front()).toContainText(card1.front);
+      expect(front()).toContainText(dueCard1.front);
       expect(back()).toBeNull();
     });
   });

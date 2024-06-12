@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card as CardType } from '../../Types';
+import { CardType as CardType } from '../../Types';
 import Card from './Card';
 import ButtonRow from '../components/ButtonRow';
 import {
@@ -7,43 +7,46 @@ import {
   answerCardResponseType,
 } from '../../server/routes/anki';
 import { Typography } from 'antd';
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 type Props = {
-  due: CardType[];
-  learn: CardType[];
-  new: CardType[];
+  newDeck: CardType[];
+  learnDeck: CardType[];
+  dueDeck: CardType[];
   onDone: () => void;
 };
 type State = {
-  dueDeck: CardType[];
-  learnDeck: CardType[];
   newDeck: CardType[];
+  learnDeck: CardType[];
+  dueDeck: CardType[];
   currentCard: CardType | null;
   currentDeck: string;
+  newCardsEnabled: boolean;
 };
 
 export default class DeckReview extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const { card, deck } = this.getNextCardAndDeck(
-      props.due,
-      props.learn,
-      props.new
+      props.newDeck,
+      props.learnDeck,
+      props.dueDeck
     );
+
     this.state = {
-      dueDeck: this.props.due,
-      learnDeck: this.props.learn,
-      newDeck: this.props.new,
+      dueDeck: this.props.dueDeck,
+      learnDeck: this.props.learnDeck,
+      newDeck: this.props.newDeck,
       currentCard: card,
       currentDeck: deck,
+      newCardsEnabled: true,
     };
   }
 
   getNextCardAndDeck = (
-    dueCards: CardType[],
+    newCards: CardType[],
     learnCards: CardType[],
-    newCards: CardType[]
+    dueCards: CardType[]
   ): { card: CardType | null; deck: string } => {
     let mostExpired = this.getMostExpiredCard(learnCards);
     if (mostExpired) {
@@ -98,22 +101,40 @@ export default class DeckReview extends React.Component<Props, State> {
         (card) => card.id !== this.state.currentCard?.id
       );
     }
-    if (this.state.currentDeck === 'new' || gotAnswerWrong || this.state.currentCard?.leftToStudy === 2) {
+    if (
+      this.state.currentDeck === 'new' ||
+      gotAnswerWrong ||
+      this.state.currentCard?.leftToStudy === 2
+    ) {
       let currentCard = this.state.currentCard as CardType;
       currentCard.due = null;
       learnCards.push(currentCard);
     }
-    const { card, deck } = this.getNextCardAndDeck(
-      dueCards,
-      learnCards,
-      newCards
-    );
-    this.setState({ currentCard: card, currentDeck: deck });
     this.setState({
       dueDeck: dueCards,
       learnDeck: learnCards,
       newDeck: newCards,
     });
+    this.setNextCard(
+      newCards,
+      learnCards,
+      dueCards,
+      this.state.newCardsEnabled
+    );
+  };
+
+  setNextCard = (
+    newCards: CardType[],
+    learnCards: CardType[],
+    dueCards: CardType[],
+    newCardsEnabled: boolean
+  ) => {
+    const { card, deck } = this.getNextCardAndDeck(
+      newCardsEnabled ? newCards : [],
+      learnCards,
+      dueCards
+    );
+    this.setState({ currentCard: card, currentDeck: deck, newCardsEnabled });
   };
 
   updateServerWithCardAnswered = async (ease: 1 | 2 | 3 | 4) => {
@@ -150,27 +171,24 @@ export default class DeckReview extends React.Component<Props, State> {
     this.updateCard(ease === 1); //TODO: this is wrong as sometimes cards are learn and need to be studied again
     this.updateServerWithCardAnswered(ease);
   };
+  setNewCardsEnabled = (newCardsEnabled: boolean) => {
+    this.setNextCard(
+      this.state.newDeck,
+      this.state.learnDeck,
+      this.state.dueDeck,
+      newCardsEnabled
+    );
+  };
   render() {
     return (
       <>
-        {this.state.currentCard === null ? (
-          <>
-            <ButtonRow
-              buttons={[{ text: 'Back', key: 'back' }]}
-              onClick={this.props.onDone}
-            />
-            <Paragraph className='card'>No cards in deck</Paragraph>
-          </>
-        ) : (
-          <>
-            <DeckSummary {...this.state} />
-            <Card
-              onBack={this.props.onDone}
-              cardAnswered={this.cardAnswered}
-              card={this.state.currentCard}
-            />
-          </>
-        )}
+        <DeckSummary {...this.state} />
+        <Card
+          card={this.state.currentCard}
+          onBack={this.props.onDone}
+          cardAnswered={this.cardAnswered}
+          studyNewCards={this.setNewCardsEnabled}
+        />
       </>
     );
   }
@@ -183,21 +201,35 @@ type DeckSummaryProps = {
   currentDeck: string;
 };
 export const DeckSummary = (props: DeckSummaryProps) => {
-  //You need to set the key here to force a re-render 
-  //because the underline prop doesn't trigger a re-render 
+  //You need to set the key here to force a re-render
+  //because the underline prop doesn't trigger a re-render
   //if the value is the same in antd
   return (
     <>
       <Text>Due: </Text>
-      <Text key={"new" + (props.currentDeck == 'new') + " " + props.newDeck.length} underline={props.currentDeck == 'new' ? true : false}>
+      <Text
+        key={'new' + (props.currentDeck == 'new') + ' ' + props.newDeck.length}
+        underline={props.currentDeck == 'new' ? true : false}
+      >
         {props.newDeck.length}
       </Text>
       &nbsp;
-      <Text key={"learn" + (props.currentDeck == 'learn') + " " + props.learnDeck.length} underline={props.currentDeck == 'learn' ? true : false}>
+      <Text
+        key={
+          'learn' +
+          (props.currentDeck == 'learn') +
+          ' ' +
+          props.learnDeck.length
+        }
+        underline={props.currentDeck == 'learn' ? true : false}
+      >
         {props.learnDeck.length}
       </Text>
       &nbsp;
-      <Text key={"due" + (props.currentDeck == 'due') + " " + props.dueDeck.length} underline={props.currentDeck == 'due' ? true : false}>
+      <Text
+        key={'due' + (props.currentDeck == 'due') + ' ' + props.dueDeck.length}
+        underline={props.currentDeck == 'due' ? true : false}
+      >
         {props.dueDeck.length}
       </Text>
     </>

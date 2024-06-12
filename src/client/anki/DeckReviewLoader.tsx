@@ -1,7 +1,7 @@
 import React from 'react';
 import DeckReview from './DeckReview';
 import ServerHandler from '../ServerHandler';
-import { Card, Cards } from '../../Types';
+import { CardType, Cards } from '../../Types';
 import { dueCardsRequestType, dueCardsResponseType } from '../../server/routes/anki';
 import { Typography } from 'antd';
 const { Paragraph } = Typography;
@@ -11,9 +11,9 @@ type Props = {
     onDone: () => void;
 };
 type State = {
-  due: Card[] | null;
-  learn: Card[] | null;
-  new: Card[] | null;
+  due: CardType[] | null;
+  learn: CardType[] | null;
+  new: CardType[] | null;
 };
 export default class DeckReviewLoader extends React.Component<Props, State>{
   constructor(props) {
@@ -35,6 +35,6 @@ export default class DeckReviewLoader extends React.Component<Props, State>{
     if (this.state.due === null || this.state.learn === null || this.state.new === null) {
       return <Paragraph>Loading...</Paragraph>;
     }
-    return <DeckReview onDone={this.props.onDone} due={this.state.due} learn={this.state.learn} new={this.state.new}/>;
+    return <DeckReview onDone={this.props.onDone} dueDeck={this.state.due} learnDeck={this.state.learn} newDeck={this.state.new}/>;
   }
 }

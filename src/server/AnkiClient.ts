@@ -1,4 +1,4 @@
-import { Card } from '../Types';
+import { CardType } from '../Types';
 
 type AnkiConnectCardType = {
   answer: string;
@@ -184,7 +184,7 @@ export default class AnkiClient {
     return ['<10m', '?', '?', '?'];
   };
 
-  getCardFromAnkiCard = (card: AnkiConnectCardType): Card => {
+  getCardFromAnkiCard = (card: AnkiConnectCardType): CardType => {
     const due = card.due > 1000000 ? card.due * 1000 : null;
     const intervals = this.getIntervals(card);
     return {
@@ -202,14 +202,14 @@ export default class AnkiClient {
     };
   };
 
-  async getCardInfo(cardIdArray: number[]): Promise<Card[]> {
+  async getCardInfo(cardIdArray: number[]): Promise<CardType[]> {
     let response = await this.postToAnki({
       action: 'cardsInfo',
       version: 6,
       params: { cards: cardIdArray },
     });
     const rawCards: AnkiConnectCardInfoResponseType = await response.json();
-    let cards: Card[] = [];
+    let cards: CardType[] = [];
     rawCards.result.forEach((card) => {
       cards.push(this.getCardFromAnkiCard(card));
     });

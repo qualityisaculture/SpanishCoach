@@ -1,4 +1,4 @@
-import { Card } from '../../src/Types';
+import { CardType } from '../../src/Types';
 import _ from 'lodash';
 import {
   answerCardRequestType,
@@ -8,7 +8,7 @@ import {
 } from '../../src/server/routes/anki';
 import EditComponent from '../e2e/components/Edit.component';
 
-export function getMockCard(type: string, id: number): Card {
+export function getMockCard(type: string, id: number): CardType {
   return {
     "id": id,
     "noteId": id,
@@ -25,9 +25,9 @@ export function getMockCard(type: string, id: number): Card {
 }
 
 export function getMockCards(newCount: number, learnCount: number, dueCount: number): dueCardsResponseType {
-  let newCards: Card[] = _.range(0, newCount).map((i: number) => getMockCard("new", i));
-  let dueCards: Card[] = _.range(0, dueCount).map((i: number) => getMockCard("due", i));
-  let learnCards: Card[] = _.range(0, learnCount).map((i: number) => getMockCard("learn", i));
+  let newCards: CardType[] = _.range(0, newCount).map((i: number) => getMockCard("new", i));
+  let dueCards: CardType[] = _.range(0, dueCount).map((i: number) => getMockCard("due", i));
+  let learnCards: CardType[] = _.range(0, learnCount).map((i: number) => getMockCard("learn", i));
   return {
     "new": newCards,
     "due": dueCards,
@@ -86,6 +86,10 @@ export default class StudyCard {
     cy.get('#cancel').click();
   }
 
+  tapNewCardSwitch() {
+    cy.get('#new-card-switch').click();
+  }
+
   getCardFront() {
     return cy.get('.card-front');
   }
@@ -124,5 +128,9 @@ export default class StudyCard {
 
   tapAnswerEasy() {
     cy.get('#answer-easy').click();
+  }
+
+  tapAnswerAgain() {
+    cy.get('#answer-again').click();
   }
 }

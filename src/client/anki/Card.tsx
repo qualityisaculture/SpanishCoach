@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card as CardType } from '../../Types';
+import { CardType as CardType } from '../../Types';
 import ButtonRow, { ButtonRowButtonType } from '../components/ButtonRow';
 import ChatModal from '../components/ChatModal';
 import {
@@ -8,9 +8,11 @@ import {
 } from '../../server/routes/anki';
 
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Divider, FloatButton } from 'antd';
+import { Divider, FloatButton, Switch } from 'antd';
 import EditComponent from '../components/EditComponent';
 import { red, orange, green, blue } from '@ant-design/colors';
+import { Typography } from 'antd';
+const { Paragraph } = Typography;
 
 const buttonRowStyle: React.CSSProperties = {
   position: 'absolute',
@@ -22,18 +24,21 @@ const centerStyle: React.CSSProperties = {
   display: 'flex',
 };
 type Props = {
-  card: CardType;
-  edit?: boolean;
+  card: CardType | null;
   cardAnswered: (ease: 1 | 2 | 3 | 4) => void;
   onBack: () => void;
+  studyNewCards: (newCards: boolean) => void;
+  edit?: boolean;
 };
 type State = {
   state: 'question' | 'answer';
   editMode: boolean;
-  front: string;
-  back: string;
-  originalFront: string;
-  originalBack: string;
+  card: {
+    front: string;
+    back: string;
+    originalFront: string;
+    originalBack: string;
+  } | null;
   isModalOpen: boolean;
 };
 export default class Card extends React.Component<Props, State> {
@@ -45,149 +50,61 @@ export default class Card extends React.Component<Props, State> {
     this.state = {
       state: 'question',
       editMode: false,
-      front: props.card.front,
-      back: props.card.back,
-      originalFront: props.card.front,
-      originalBack: props.card.back,
+      card: props.card
+        ? {
+            front: props.card.front,
+            back: props.card.back,
+            originalFront: props.card.front,
+            originalBack: props.card.back,
+          }
+        : null,
       isModalOpen: false,
     };
   }
-  componentDidUpdate(
+  componentDidUpdate = (
     prevProps: Readonly<Props>,
     prevState: Readonly<State>,
     snapshot?: any
-  ): void {
-    if (prevProps.card !== this.props.card) {
+  ): void => {
+    if (this.props.card && prevProps.card !== this.props.card) {
       this.setState({
         state: 'question',
-        front: this.props.card.front,
-        back: this.props.card.back,
-        originalFront: this.props.card.front,
-        originalBack: this.props.card.back,
+        card: {
+          front: this.props.card.front,
+          back: this.props.card.back,
+          originalFront: this.props.card.front,
+          originalBack: this.props.card.back,
+        },
       });
     }
-  }
+  };
   questionClicked = () => {
     this.setState({ state: 'answer' });
   };
-  questionAnswered = (buttonId: string) => {
-    let ease = parseInt(buttonId) as 1 | 2 | 3 | 4;
+  questionAnswered = (ease: 1 | 2 | 3 | 4) => {
     this.props.cardAnswered(ease);
     this.setState({ state: 'question' });
   };
-  getAnswerButtons = () => {
-    const buttons: ButtonRowButtonType[] = [
-      {
-        text: 'Again',
-        additionalText: this.props.card.failInterval,
-        key: '1',
-        id: 'answer-again',
-        style: { backgroundColor: red[4] },
-      },
-      {
-        text: 'Hard',
-        additionalText: this.props.card.hardInterval,
-        key: '2',
-        id: 'answer-hard',
-        style: { backgroundColor: orange[4] },
-      },
-      {
-        text: 'Medium',
-        additionalText: this.props.card.mediumInterval,
-        key: '3',
-        id: 'answer-medium',
-        style: { backgroundColor: green[4] },
-      },
-      {
-        text: 'Easy',
-        additionalText: this.props.card.easyInterval,
-        key: '4',
-        id: 'answer-easy',
-        style: { backgroundColor: blue[4] },
-      },
-    ];
-    return buttons;
-  };
   questionEdited = (value: string) => {
-    this.setState({ front: value });
-  };
-  question = () => {
-    return (
-      <>
-        <h4
-          dangerouslySetInnerHTML={{ __html: this.state.front }}
-          className="card-front ant-typography css-dev-only-do-not-override-1drr2mu"
-        />
-        {this.state.editMode ? (
-          <EditComponent
-            inputId='card-front-input'
-            defaultValue={this.state.front}
-            onChange={this.questionEdited}
-          />
-        ) : null}
-      </>
-    );
+    if (!this.state.card) {
+      throw new Error('Card is null');
+    }
+    this.setState({ card: { ...this.state.card, front: value } });
   };
   answerEdited = (value: string) => {
-    this.setState({ back: value });
-  };
-  answer = () => {
-    if (this.state.editMode) {
-      return (
-        <>
-          <Divider />
-          <h4
-            dangerouslySetInnerHTML={{ __html: this.state.back }}
-            className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
-          />
-          <EditComponent
-            inputId='card-back-input'
-            defaultValue={this.state.back}
-            onChange={this.answerEdited}
-          />
-        </>
-      );
+    if (!this.state.card) {
+      throw new Error('Card is null');
     }
-
-    if (this.state.state === 'answer') {
-      let tempDivElement = document.createElement("div");
-      tempDivElement.innerHTML = this.state.back;
-      let strippedBack = tempDivElement.textContent || "";
-      return (
-        <>
-          <Divider />
-          <h4
-            dangerouslySetInnerHTML={{ __html: this.state.back }}
-            className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
-          />
-          <ButtonRow
-            block
-            style={buttonRowStyle}
-            buttons={this.getAnswerButtons()}
-            onClick={this.questionAnswered}
-          />
-          <FloatButton
-            className="modal-button"
-            shape="circle"
-            type="primary"
-            style={{ right: 50, bottom: 150 }}
-            icon={<QuestionCircleOutlined />}
-            onClick={() => this.setState({ isModalOpen: true })}
-          />
-          <ChatModal
-            originalAnswer={strippedBack}
-            isModalOpen={this.state.isModalOpen}
-            onCancel={() => this.setState({ isModalOpen: false })}
-          ></ChatModal>
-        </>
-      );
-    }
+    this.setState({ card: { ...this.state.card, back: value } });
   };
-  updateServer = async () => {
+  updateCardOnServer = async () => {
+    if (!this.props.card || !this.state.card) {
+      throw new Error('Card is null');
+    }
     let body: updateCardRequestType = {
       cardId: this.props.card.noteId,
-      front: this.state.front,
-      back: this.state.back,
+      front: this.state.card.front,
+      back: this.state.card.back,
     };
     const response = await global.fetch('/updateCard', {
       method: 'POST',
@@ -196,20 +113,26 @@ export default class Card extends React.Component<Props, State> {
         'Content-Type': 'application/json',
       },
     });
-    const json: updateCardResponseType = await response.json();
+    const updateCardResponse: updateCardResponseType = await response.json();
     this.setState({
       state: 'question',
       editMode: false,
     });
-    if (json.success !== true) {
+    if (updateCardResponse.success !== true) {
       this.setState({
-        front: this.state.originalFront,
-        back: this.state.originalBack,
+        card: {
+          ...this.state.card,
+          front: this.state.card.originalFront,
+          back: this.state.card.originalBack,
+        },
       });
     } else {
       this.setState({
-        originalFront: this.state.front,
-        originalBack: this.state.back,
+        card: {
+          ...this.state.card,
+          originalFront: this.state.card.front,
+          originalBack: this.state.card.back,
+        },
       });
     }
   };
@@ -219,50 +142,210 @@ export default class Card extends React.Component<Props, State> {
     } else if (id === 'edit') {
       this.setState({ editMode: true });
     } else if (id === 'cancel') {
+      if (!this.state.card) {
+        throw new Error('Card is null');
+      }
       this.setState({
         editMode: false,
-        front: this.state.originalFront,
-        back: this.state.originalBack,
+        card: {
+          ...this.state.card,
+          front: this.state.card.originalFront,
+          back: this.state.card.originalBack,
+        },
       });
     } else if (id === 'save') {
-      // this.setState({ editMode: false });
-      this.updateServer();
+      this.updateCardOnServer();
     }
   };
   getMenuButtons = () => {
-    if (this.state.editMode) {
+    const newCardsSwitch = (
+      <Switch
+        onChange={this.props.studyNewCards}
+        checkedChildren="New Cards"
+        unCheckedChildren="No New Cards"
+        defaultChecked
+        id="new-card-switch"
+      />
+    );
+    const backButton = { text: 'Back', key: 'back', id: 'back' };
+    const editButton = { text: 'Edit', key: 'edit', id: 'edit' };
+    const cancelButton = { text: 'Cancel', key: 'cancel', id: 'cancel' };
+    const saveButton = { text: 'Save', key: 'save', id: 'save' };
+    if (!this.state.card) {
       return (
-        <ButtonRow
-          buttons={[
-            { text: 'Cancel', key: 'cancel', id: 'cancel'},
-            { text: 'Save', key: 'save', id: 'save'},
-          ]}
-          onClick={this.onMenuClick}
-        />
+        <>
+          <ButtonRow buttons={[backButton]} onClick={this.onMenuClick} />
+          {newCardsSwitch}
+        </>
       );
     }
-    return (
+    const buttonRow = this.state.editMode ? (
       <ButtonRow
-        buttons={[
-          { text: 'Back', key: 'back', id: 'back'},
-          { text: 'Edit', key: 'edit', id: 'edit'},
-        ]}
+        buttons={[cancelButton, saveButton]}
+        onClick={this.onMenuClick}
+      />
+    ) : (
+      <ButtonRow
+        buttons={[backButton, editButton]}
         onClick={this.onMenuClick}
       />
     );
+    return (
+      <>
+        {buttonRow}
+        {newCardsSwitch}
+      </>
+    );
   };
   render() {
-    // if (this.state.state === 'question') {
-
+    if (!this.state.card || !this.props.card) {
+      return (
+        <>
+          {this.getMenuButtons()}
+          <Paragraph className="card">No cards in deck</Paragraph>
+        </>
+      );
+    }
     return (
       <>
         {this.getMenuButtons()}
         <Divider />
         <div className="card" onClick={this.questionClicked}>
-          {this.question()}
-          {this.answer()}
+          <Question
+            front={this.state.card.front}
+            editMode={this.state.editMode}
+            questionEdited={this.questionEdited}
+          />
+          {this.state.state === 'answer' || this.state.editMode ? (
+            <Answer
+              back={this.state.card.back}
+              editMode={this.state.editMode}
+              card={this.props.card}
+              answerEdited={this.answerEdited}
+              questionAnswered={this.questionAnswered}
+              isModalOpen={this.state.isModalOpen}
+              setModal={(open: boolean) => this.setState({ isModalOpen: open })}
+            />
+          ) : null}
         </div>
       </>
     );
   }
 }
+
+const Question = (props: {
+  front: string;
+  editMode: boolean;
+  questionEdited: (value: string) => void;
+}) => {
+  return (
+    <>
+      <h4
+        dangerouslySetInnerHTML={{ __html: props.front }}
+        className="card-front ant-typography css-dev-only-do-not-override-1drr2mu"
+      />
+      {props.editMode ? (
+        <EditComponent
+          inputId="card-front-input"
+          defaultValue={props.front}
+          onChange={props.questionEdited}
+        />
+      ) : null}
+    </>
+  );
+};
+
+const Answer = (props: {
+  back: string;
+  editMode: boolean;
+  card: CardType;
+  answerEdited: (value: string) => void;
+  questionAnswered: (ease: 1 | 2 | 3 | 4) => void;
+  isModalOpen: boolean;
+  setModal: (open: boolean) => void;
+}) => {
+  function questionAnswered(buttonId: string) {
+    let ease = parseInt(buttonId) as 1 | 2 | 3 | 4;
+    props.questionAnswered(ease);
+  }
+  function getAnswerButtons() {
+    const buttons: ButtonRowButtonType[] = [
+      {
+        text: 'Again',
+        additionalText: props.card.failInterval,
+        key: '1',
+        id: 'answer-again',
+        style: { backgroundColor: red[4] },
+      },
+      {
+        text: 'Hard',
+        additionalText: props.card.hardInterval,
+        key: '2',
+        id: 'answer-hard',
+        style: { backgroundColor: orange[4] },
+      },
+      {
+        text: 'Medium',
+        additionalText: props.card.mediumInterval,
+        key: '3',
+        id: 'answer-medium',
+        style: { backgroundColor: green[4] },
+      },
+      {
+        text: 'Easy',
+        additionalText: props.card.easyInterval,
+        key: '4',
+        id: 'answer-easy',
+        style: { backgroundColor: blue[4] },
+      },
+    ];
+    return buttons;
+  }
+  let tempDivElement = document.createElement('div');
+  tempDivElement.innerHTML = props.back;
+  let strippedBack = tempDivElement.textContent || '';
+  if (props.editMode) {
+    return (
+      <>
+        <Divider />
+        <h4
+          dangerouslySetInnerHTML={{ __html: props.back }}
+          className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
+        />
+        <EditComponent
+          inputId="card-back-input"
+          defaultValue={props.back}
+          onChange={props.answerEdited}
+        />
+      </>
+    );
+  }
+  return (
+    <>
+      <Divider />
+      <h4
+        dangerouslySetInnerHTML={{ __html: props.back }}
+        className="card-back ant-typography css-dev-only-do-not-override-1drr2mu"
+      />
+      <ButtonRow
+        block
+        style={buttonRowStyle}
+        buttons={getAnswerButtons()}
+        onClick={questionAnswered}
+      />
+      <FloatButton
+        className="modal-button"
+        shape="circle"
+        type="primary"
+        style={{ right: 50, bottom: 150 }}
+        icon={<QuestionCircleOutlined />}
+        onClick={() => props.setModal(true)}
+      />
+      <ChatModal
+        originalAnswer={strippedBack}
+        isModalOpen={props.isModalOpen}
+        onCancel={() => props.setModal(false)}
+      ></ChatModal>
+    </>
+  );
+};

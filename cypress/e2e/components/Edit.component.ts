@@ -24,7 +24,7 @@ export default class EditComponent {
   }
 
   tapFormatButton = (index: number) => {
-    let selector = `.edit-component:nth-of-type(${this.index}) > div > button:nth-of-type(${index})`;
+    let selector = `.edit-component:nth-of-type(${this.index}) > span > button:nth-of-type(${index})`;
     cy.get(selector).click();
   };
   tapBoldButton = () => this.tapFormatButton(1);
