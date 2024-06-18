@@ -81,41 +81,6 @@ describe('AnkiClient', () => {
     });
   });
 
-  describe('addCard', () => {
-    it('should call anki', async () => {
-      ankiClient.addCard('deck1', 'front', 'back');
-      expectPostToAnki({
-        action: 'addNote',
-        version: 6,
-        params: {
-          note: {
-            deckName: 'deck1',
-            modelName: 'Basic',
-            fields: {
-              Front: 'front',
-              Back: 'back',
-            },
-          },
-        },
-      });
-    });
-
-    it('should return success on success', async () => {
-      const promise = ankiClient.addCard('deck1', 'front', 'back');
-      ankiResponse({ result: 1709723194261, error: null });
-      const result = await promise;
-      expect(result.success).toEqual(true);
-    });
-
-    it('should return error on error', async () => {
-      const promise = ankiClient.addCard('deck1', 'front', 'back');
-      ankiResponse({ result: null, error: 'example error' });
-      const result = await promise;
-      expect(result.success).toEqual(false);
-      expect(result.message).toEqual('example error');
-    });
-  });
-
   describe('getDueCards', () => {
     it('should call anki', async () => {
       ankiClient.getDueCards('deck1');
@@ -298,6 +263,41 @@ describe('AnkiClient', () => {
     });
   });
 
+  describe('addCard', () => {
+    it('should call anki', async () => {
+      ankiClient.addCard('deck1', 'front', 'back');
+      expectPostToAnki({
+        action: 'addNote',
+        version: 6,
+        params: {
+          note: {
+            deckName: 'deck1',
+            modelName: 'Basic',
+            fields: {
+              Front: 'front',
+              Back: 'back',
+            },
+          },
+        },
+      });
+    });
+
+    it('should return success on success', async () => {
+      const promise = ankiClient.addCard('deck1', 'front', 'back');
+      ankiResponse({ result: 1709723194261, error: null });
+      const result = await promise;
+      expect(result.success).toEqual(true);
+    });
+
+    it('should return error on error', async () => {
+      const promise = ankiClient.addCard('deck1', 'front', 'back');
+      ankiResponse({ result: null, error: 'example error' });
+      const result = await promise;
+      expect(result.success).toEqual(false);
+      expect(result.message).toEqual('example error');
+    });
+  });
+
   describe('updateCard', () => {
     it('should call anki', async () => {
       ankiClient.updateCard(1514547547030, 'new front content', 'new back content');
@@ -328,6 +328,33 @@ describe('AnkiClient', () => {
       ankiResponse({ result: null, error: 'example error' });
       const result = await promise;
       expect(result).toEqual({ success: false, message: 'example error' });
+    });
+  });
+
+  describe('deleteCard', () => {
+    it('should call anki', async () => {
+      ankiClient.deleteCard(1514547547030);
+      expectPostToAnki({
+        action: 'deleteNotes',
+        version: 6,
+        params: {
+          notes: [1514547547030],
+        },
+      });
+    });
+
+    it('should return success on success', async () => {
+      const promise = ankiClient.deleteCard(1514547547030);
+      ankiResponse({ result: null, error: null });
+      const result = await promise;
+      expect(result).toEqual({ result: true, error: null });
+    });
+
+    it('should return error on error', async () => {
+      const promise = ankiClient.deleteCard(1514547547030);
+      ankiResponse({ result: null, error: 'example error' });
+      const result = await promise;
+      expect(result).toEqual({ result: false, error: 'example error' });
     });
   });
 });
