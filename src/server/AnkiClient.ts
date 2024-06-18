@@ -144,8 +144,8 @@ type PostTypes =
   | DeleteCardType;
 type tagType = 'is:due -is:learn' | 'is:new' | 'is:learn';
 
-type DeleteResponseType = {
-  result: boolean;
+export type DeleteResponseType = {
+  success: boolean;
   error: string | null;
 };
 
@@ -338,9 +338,9 @@ export default class AnkiClient {
     });
     let json = await response.json();
     if (json.error !== null) {
-      return { result: false, error: json.error };
+      return { success: false, error: json.error };
     } else {
-      return { result: true, error: null };
+      return { success: true, error: null };
     }
   };
 }

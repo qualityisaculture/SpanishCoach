@@ -347,14 +347,14 @@ describe('AnkiClient', () => {
       const promise = ankiClient.deleteCard(1514547547030);
       ankiResponse({ result: null, error: null });
       const result = await promise;
-      expect(result).toEqual({ result: true, error: null });
+      expect(result).toEqual({ success: true, error: null });
     });
 
     it('should return error on error', async () => {
       const promise = ankiClient.deleteCard(1514547547030);
       ankiResponse({ result: null, error: 'example error' });
       const result = await promise;
-      expect(result).toEqual({ result: false, error: 'example error' });
+      expect(result).toEqual({ success: false, error: 'example error' });
     });
   });
 });
