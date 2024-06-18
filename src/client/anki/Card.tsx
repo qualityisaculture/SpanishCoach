@@ -3,6 +3,7 @@ import { CardType as CardType } from '../../Types';
 import ButtonRow, { ButtonRowButtonType } from '../components/ButtonRow';
 import ChatModal from '../components/ChatModal';
 import {
+  deleteCardRequestType,
   updateCardRequestType,
   updateCardResponseType,
 } from '../../server/routes/anki';
@@ -136,11 +137,32 @@ export default class Card extends React.Component<Props, State> {
       });
     }
   };
-  onMenuClick = async (id: 'back' | 'edit' | 'cancel') => {
+  onMenuClick = async (id: 'back' | 'edit' | 'delete' | 'cancel') => {
     if (id === 'back') {
       this.props.onBack();
     } else if (id === 'edit') {
       this.setState({ editMode: true });
+    } else if (id === 'delete') {
+      let deleteResult = window.confirm('Are you sure you want to delete this card?');
+      if (deleteResult) {
+        if (!this.props.card) {
+          throw new Error('Card is null');
+        }
+        let body: deleteCardRequestType = {
+          cardId: this.props.card.noteId,
+        };
+        const response = await global.fetch('/deleteCard', {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const deleteCardResponse = await response.json();
+        if (deleteCardResponse.success === true) {
+          this.props.onBack();
+        }
+      }
     } else if (id === 'cancel') {
       if (!this.state.card) {
         throw new Error('Card is null');
@@ -169,6 +191,7 @@ export default class Card extends React.Component<Props, State> {
     );
     const backButton = { text: 'Back', key: 'back', id: 'back' };
     const editButton = { text: 'Edit', key: 'edit', id: 'edit' };
+    const deleteButton = { text: 'Delete', key: 'delete', id: 'delete' };
     const cancelButton = { text: 'Cancel', key: 'cancel', id: 'cancel' };
     const saveButton = { text: 'Save', key: 'save', id: 'save' };
     if (!this.state.card) {
@@ -186,7 +209,7 @@ export default class Card extends React.Component<Props, State> {
       />
     ) : (
       <ButtonRow
-        buttons={[backButton, editButton]}
+        buttons={[backButton, editButton, deleteButton]}
         onClick={this.onMenuClick}
       />
     );

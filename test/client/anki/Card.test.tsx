@@ -30,11 +30,12 @@ describe('Card', () => {
     onBack: jest.fn(),
     studyNewCards: jest.fn(),
   };
-  const front = () => elements('h4')[0] ? elements('h4')[0] : null;
-  const back = () => elements('h4')[1]? elements('h4')[1] : null;
+  const front = () => (elements('h4')[0] ? elements('h4')[0] : null);
+  const back = () => (elements('h4')[1] ? elements('h4')[1] : null);
   beforeEach(() => {
     initialiseDOM();
     defaultProps.studyNewCards.mockClear();
+    defaultProps.onBack.mockClear();
   });
   const newCardSwitch = () => switches()[0];
 
@@ -46,11 +47,12 @@ describe('Card', () => {
     expect(newCardSwitch()).not.toBeNull();
   });
 
-  it('should display back, edit and new cards buttons when card is passed', () => {
+  it('should display back, edit, delete and new cards buttons when card is passed', () => {
     render(<Card {...defaultProps} />);
-    expect(buttons().length).toEqual(3);
+    expect(buttons().length).toEqual(4);
     expect(button('Back')).toBeDefined();
     expect(button('Edit')).toBeDefined();
+    expect(button('Delete')).toBeDefined();
     expect(newCardSwitch()).not.toBeNull();
   });
 
@@ -98,30 +100,6 @@ describe('Card', () => {
     render(<Card {...defaultProps} card={dueCard2} />);
     expect(front()).toContainText(dueCard2.front);
     expect(back()).toBeNull();
-  });
-
-  describe('pause new card', () => {
-    it('should display a new card switched, defaulted to true', () => {
-      render(<Card {...defaultProps} />);
-      expect(newCardSwitch()).not.toBeNull();
-      expect(newCardSwitch().getAttribute('aria-checked')).toBe("true");
-    });
-
-    it('should call newCards when the switch is tapped', () => {
-      render(<Card {...defaultProps} />);
-      click(newCardSwitch());
-      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(1);
-      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(false, expect.anything());
-    });
-
-    it('should call newCards with true when the switch is tapped twice', () => {
-      render(<Card {...defaultProps} />);
-      click(newCardSwitch());
-      click(newCardSwitch());
-      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(2);
-      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(false, expect.anything());
-      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(true, expect.anything());
-    });
   });
 
   describe('edit mode', () => {
@@ -175,10 +153,10 @@ describe('Card', () => {
         noteId: 2,
         front: 'different front',
         back: 'different back',
-        failInterval: "1",
-        hardInterval: "2",
-        mediumInterval: "3",
-        easyInterval: "4",
+        failInterval: '1',
+        hardInterval: '2',
+        mediumInterval: '3',
+        easyInterval: '4',
         due: 1,
         isNew: false,
         leftToStudy: 1,
@@ -323,30 +301,140 @@ describe('Card', () => {
     });
   });
 
+  describe('delete card', () => {
+    const fetchMockHandler = new FetchMockHandler();
+    let fetch: jest.SpyInstance;
+    let mockConfirm: jest.Mock;
+
+    beforeAll(() => {
+      global.confirm = jest.fn();
+      mockConfirm = global.confirm as jest.Mock;
+    });
+    beforeEach(() => {
+      fetch = fetchMockHandler.beforeEach();
+      mockConfirm.mockClear();
+    });
+    afterEach(async () => {
+      await fetchMockHandler.afterEach();
+
+    });
+
+    it('should display a delete button', () => {
+      render(<Card {...defaultProps} />);
+      expect(button('Delete')).toBeDefined();
+    });
+
+    it('should display a confirm message when delete is clicked', () => {
+      render(<Card {...defaultProps} />);
+      click(button('Delete'));
+      expect(mockConfirm).toHaveBeenCalledTimes(1);
+      expect(mockConfirm).toHaveBeenCalledWith('Are you sure you want to delete this card?');
+    });
+
+    it('should not call server when cancel is clicked', () => {
+      render(<Card {...defaultProps} />);
+      mockConfirm.mockReturnValue(false);
+      click(button('Delete'));
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should call server when delete is confirmed', () => {
+      render(<Card {...defaultProps} />);
+      mockConfirm.mockReturnValue(true);
+      click(button('Delete'));
+      expect(fetch).toHaveBeenCalledWith('/deleteCard', {
+        method: 'POST',
+        body: JSON.stringify({
+          cardId: dueCard1.noteId,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    });
+
+    it('should call onBack when delete is clicked', async () => {
+      render(<Card {...defaultProps} />);
+      mockConfirm.mockReturnValue(true);
+      click(button('Delete'));
+      let successResponse: updateCardResponseType = {
+        success: true,
+        message: null,
+      };
+      await fetchMockHandler.resolvePromise(0, successResponse);
+      expect(defaultProps.onBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not call onBack when delete fails', async () => {
+      render(<Card {...defaultProps} />);
+      mockConfirm.mockReturnValue(true);
+      click(button('Delete'));
+      let failureResponse: updateCardResponseType = {
+        success: false,
+        message: 'error',
+      };
+      await fetchMockHandler.resolvePromise(0, failureResponse);
+      expect(defaultProps.onBack).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pause new card', () => {
+    it('should display a new card switched, defaulted to true', () => {
+      render(<Card {...defaultProps} />);
+      expect(newCardSwitch()).not.toBeNull();
+      expect(newCardSwitch().getAttribute('aria-checked')).toBe('true');
+    });
+
+    it('should call newCards when the switch is tapped', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(1);
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(
+        false,
+        expect.anything()
+      );
+    });
+
+    it('should call newCards with true when the switch is tapped twice', () => {
+      render(<Card {...defaultProps} />);
+      click(newCardSwitch());
+      click(newCardSwitch());
+      expect(defaultProps.studyNewCards).toHaveBeenCalledTimes(2);
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(
+        false,
+        expect.anything()
+      );
+      expect(defaultProps.studyNewCards).toHaveBeenCalledWith(
+        true,
+        expect.anything()
+      );
+    });
+  });
+
   describe('modal', () => {
     const modalButton = () => element('.modal-button');
     const closeModalButton = () => element('.ant-modal-close');
     const modal = () => element('.ant-modal');
 
     it('shows a modal button on answer screen', () => {
-        render(<Card {...defaultProps} />);
-        click(element('.card'));
-        expect(modalButton()).not.toBeNull();
-    })
+      render(<Card {...defaultProps} />);
+      click(element('.card'));
+      expect(modalButton()).not.toBeNull();
+    });
 
     it('launches a modal when the modal button is clicked', () => {
-        render(<Card {...defaultProps} />);
-        click(element('.card'));
-        click(modalButton());
-        expect(modal()).not.toBeNull();
+      render(<Card {...defaultProps} />);
+      click(element('.card'));
+      click(modalButton());
+      expect(modal()).not.toBeNull();
     });
 
     it('closes the modal when the cancel button is clicked', () => {
-        render(<Card {...defaultProps} />);
-        click(element('.card'));
-        click(modalButton());
-        click(closeModalButton());
-        expect(modal().style.display).toBe('none');
+      render(<Card {...defaultProps} />);
+      click(element('.card'));
+      click(modalButton());
+      click(closeModalButton());
+      expect(modal().style.display).toBe('none');
     });
   });
 });
