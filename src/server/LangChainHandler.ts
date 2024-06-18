@@ -158,7 +158,7 @@ export default class LangChainHandler {
   parser: any;
   constructor() {
     this.parser = new JsonOutputFunctionsParser();
-    this.model = new ChatOpenAI({ modelName: 'gpt-3.5-turbo' });
+    this.model = new ChatOpenAI({ modelName: 'gpt-4o' });
   }
 
   async generateExample(requiredPhrase: string): Promise<{exampleSpanish: string; exampleEnglish: string}>{

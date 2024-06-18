@@ -150,9 +150,9 @@ describe('LangChainHandler', () => {
     ChatOpenAI.mockClear();
     ChatOpenAI.bind.mockClear();
   });
-  it('creates a model with gpt-3.5', () => {
+  it('creates a model with gpt-4o', () => {
     new LangChainHandler();
-    expect(ChatOpenAI).toHaveBeenCalledWith({ modelName: 'gpt-3.5-turbo' });
+    expect(ChatOpenAI).toHaveBeenCalledWith({ modelName: 'gpt-4o' });
   });
 
   async function expectSchema(schema) {
