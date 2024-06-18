@@ -153,15 +153,25 @@ describe('App', () => {
     fetchMock = jest.spyOn(global, 'fetch');
     fetchMock.mockResolvedValue(fetchResponseOk());
     fetchMock.mockClear();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getCardInfo.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getDeckNames.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getDeckStats.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getDueCards.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getLearnCards.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].getNewCards.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].setCardAnswered.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].addCard.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].updateCard.mockReset();
+    //@ts-ignore
     AnkiClientMock.mock.instances[0].deleteCard.mockReset();
   });
 
