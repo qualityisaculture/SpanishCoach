@@ -11,32 +11,6 @@ import { DeckStats } from '../AnkiClient';
 import AnkiClient from '../AnkiClient';
 const ankiClient = new AnkiClient();
 
-export type addCardRequestType = {
-  deckName: string;
-  front: string;
-  back: string;
-};
-export type addCardResponseType = {
-  success: boolean;
-  message: string | null;
-};
-ankiRoutes.post(
-  '/addCard',
-  async (req: TRB<addCardRequestType>, res: TR<addCardResponseType>) => {
-    const deckName: string = req.body.deckName;
-    const front: string = req.body.front;
-    const back: string = req.body.back;
-
-    let response = await ankiClient.addCard(deckName, front, back);
-
-    if (response.success !== true) {
-      res.json({ success: false, message: response.message });
-    } else {
-      res.json({ success: true, message: null });
-    }
-  }
-);
-
 export type decksRequestType = {};
 export type decksResponseType = {
   result: string[];
@@ -131,6 +105,33 @@ ankiRoutes.post(
   }
 );
 
+
+export type addCardRequestType = {
+  deckName: string;
+  front: string;
+  back: string;
+};
+export type addCardResponseType = {
+  success: boolean;
+  message: string | null;
+};
+ankiRoutes.post(
+  '/addCard',
+  async (req: TRB<addCardRequestType>, res: TR<addCardResponseType>) => {
+    const deckName: string = req.body.deckName;
+    const front: string = req.body.front;
+    const back: string = req.body.back;
+
+    let response = await ankiClient.addCard(deckName, front, back);
+
+    if (response.success !== true) {
+      res.json({ success: false, message: response.message });
+    } else {
+      res.json({ success: true, message: null });
+    }
+  }
+);
+
 export type updateCardRequestType = {
   cardId: number;
   front: string;
@@ -150,6 +151,27 @@ ankiRoutes.post(
     let response = await ankiClient.updateCard(cardId, front, back);
     if (response.success !== true) {
       res.json({ success: false, message: response.message });
+    } else {
+      res.json({ success: true, message: null });
+    }
+  }
+);
+
+export type deleteCardRequestType = {
+  cardId: number;
+};
+export type deleteCardResponseType = {
+  success: boolean;
+  message: string | null;
+};
+ankiRoutes.post(
+  '/deleteCard',
+  async (req: TRB<deleteCardRequestType>, res: TR<deleteCardResponseType>) => {
+    const cardId = req.body.cardId;
+
+    let response = await ankiClient.deleteCard(cardId);
+    if (response.success !== true) {
+      res.json({ success: false, message: response.error });
     } else {
       res.json({ success: true, message: null });
     }

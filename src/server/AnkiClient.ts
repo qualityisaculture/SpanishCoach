@@ -67,7 +67,7 @@ export type AnkiConnectAddNoteResponseType = {
   error: null | string;
 };
 
-type answerCardType = {
+type AnswerCardType = {
   action: 'answerCards';
   version: 6;
   params: {
@@ -79,26 +79,26 @@ type answerCardType = {
     ];
   };
 };
-type cardsInfoType = {
+type CardsInfoType = {
   action: 'cardsInfo';
   version: 6;
   params: { cards: number[] };
 };
-type findCardsType = {
+type FindCardsType = {
   action: 'findCards';
   version: 6;
   params: { query: string };
 };
-type getDeckStatsType = {
+type GetDeckStatsType = {
   action: 'getDeckStats';
   version: 6;
   params: { decks: string[] };
 };
-type getDecksType = {
+type GetDecksType = {
   action: 'deckNames';
   version: 6;
 };
-type addCardType = {
+type AddCardType = {
   action: string;
   version: 6;
   params: {
@@ -113,7 +113,7 @@ type addCardType = {
   };
 };
 
-type updateNoteType = {
+type UpdateNoteType = {
   action: 'updateNoteFields';
   version: 6;
   params: {
@@ -126,21 +126,33 @@ type updateNoteType = {
     };
   };
 };
-
-type postTypes =
-  | answerCardType
-  | cardsInfoType
-  | findCardsType
-  | getDeckStatsType
-  | getDecksType
-  | addCardType
-  | updateNoteType;
+type DeleteCardType = {
+  action: 'deleteNotes';
+  version: 6;
+  params: {
+    notes: number[];
+  };
+};
+type PostTypes =
+  | AnswerCardType
+  | CardsInfoType
+  | FindCardsType
+  | GetDeckStatsType
+  | GetDecksType
+  | AddCardType
+  | UpdateNoteType
+  | DeleteCardType;
 type tagType = 'is:due -is:learn' | 'is:new' | 'is:learn';
+
+export type DeleteResponseType = {
+  success: boolean;
+  error: string | null;
+};
 
 export default class AnkiClient {
   constructor() {}
 
-  postToAnki = (body: postTypes) => {
+  postToAnki = (body: PostTypes) => {
     return fetch('http://localhost:8765', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -315,4 +327,20 @@ export default class AnkiClient {
       return { success: true, message: null };
     }
   }
+
+  async deleteCard(cardId: number): Promise<DeleteResponseType> {
+    let response = await this.postToAnki({
+      action: 'deleteNotes',
+      version: 6,
+      params: {
+        notes: [cardId],
+      },
+    });
+    let json = await response.json();
+    if (json.error !== null) {
+      return { success: false, error: json.error };
+    } else {
+      return { success: true, error: null };
+    }
+  };
 }

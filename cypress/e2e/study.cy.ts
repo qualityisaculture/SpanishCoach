@@ -3,7 +3,7 @@ import StudyMenu from '../pages/StudyMenu.page';
 import StudyCard from '../pages/StudyCard.page';
 import EditComponent from './components/Edit.component';
 import ChatModal from './components/ChatModal.component';
-import {newCard, learnCard} from '../../test/builders/cards';
+import { newCard, learnCard } from '../../test/builders/cards';
 
 describe('Study', () => {
   let studyMenuPage: StudyMenu;
@@ -108,7 +108,7 @@ describe('Study', () => {
         studyCardPage.getCardFront().contains('due card edited');
         studyCardPage.tapCard();
         studyCardPage.getCardBack().contains('due card back edited');
-      })
+      });
 
       describe('Formatting', () => {
         it('should bold text when bold button is clicked', () => {
@@ -164,11 +164,43 @@ describe('Study', () => {
       });
     });
 
+    describe.only('Delete', () => {
+      it('should display a confirmation modal when delete is clicked', () => {
+        cy.on('window:confirm', (text) => {
+          expect(text).to.equal('Are you sure you want to delete this card?');
+          return false;
+        });
+        studyCardPage.tapDelete();
+      });
+
+      it('should do nothing when cancel is clicked', () => {
+        cy.on('window:confirm', () => false);
+        studyCardPage.tapDelete();
+        studyCardPage.getCardFront().contains('due card');
+        studyMenuPage.getDeckRows().should('have.length', 0);
+      })
+
+      it('should send a request to delete the card when ok is clicked', () => {
+        cy.on('window:confirm', () => true);
+        studyCardPage.tapDelete();
+        studyCardPage.getDeleteIntercept().then((interception) => {
+          expect(interception.request.url).to.contain('delete');
+          expect(interception.request.body).to.contain({ cardId: 4 }); //due card in cardInfo.json
+        });
+      });
+
+      it('should return to the menu when response is received', () => {
+        cy.on('window:confirm', () => true);
+        studyCardPage.tapDelete();
+        studyMenuPage.getDeckRows().should('have.length', 3);
+      });
+    });
+
     describe('Chat Modal', () => {
       let chatModal: ChatModal;
       beforeEach(() => {
         chatModal = new ChatModal();
-      })
+      });
 
       it('should display the chat modal with the back of the card when chat is clicked', () => {
         studyCardPage.tapCard();
@@ -184,9 +216,11 @@ describe('Study', () => {
           chatModal.respondToChat('response');
         });
         chatModal.getChatRequest().then((interception) => {
-          expect(interception.request.url).to.contain(encodeURIComponent('due card back change'));
+          expect(interception.request.url).to.contain(
+            encodeURIComponent('due card back change')
+          );
         });
-      }); 
+      });
 
       it('should display the response when the response is sent', () => {
         studyCardPage.tapCard();
@@ -201,15 +235,15 @@ describe('Study', () => {
   });
 
 
+
   describe('Disable new cards', () => {
     let studyCardPage: StudyCard;
-    beforeEach(() => {
-    });
+    beforeEach(() => {});
     it('should not display new cards when new cards are disabled', () => {
       studyCardPage = new StudyCard({
-        "new": [newCard],
-        "due": [],
-        "learn": [],
+        new: [newCard],
+        due: [],
+        learn: [],
       });
       studyMenuPage.tapDeck('deck1');
       studyCardPage.getCardFront().contains('front new');
@@ -219,9 +253,9 @@ describe('Study', () => {
 
     it('should display new cards when new cards are enabled', () => {
       studyCardPage = new StudyCard({
-        "new": [newCard],
-        "due": [],
-        "learn": [],
+        new: [newCard],
+        due: [],
+        learn: [],
       });
       studyMenuPage.tapDeck('deck1');
       studyCardPage.getCardFront().contains('front new');
@@ -232,11 +266,10 @@ describe('Study', () => {
     });
 
     it('should display the next card when new card is disabled and show new card again when reenabled', () => {
-
       studyCardPage = new StudyCard({
-        "new": [newCard],
-        "due": [],
-        "learn": [learnCard],
+        new: [newCard],
+        due: [],
+        learn: [learnCard],
       });
       studyMenuPage.tapDeck('deck1');
       studyCardPage.getCardFront().contains('front learn');
@@ -247,6 +280,6 @@ describe('Study', () => {
       studyCardPage.getCardFront().contains('front learn');
       studyCardPage.tapNewCardSwitch();
       studyCardPage.getCardFront().contains('front new');
-    })
-  })
+    });
+  });
 });

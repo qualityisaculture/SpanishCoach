@@ -9,7 +9,13 @@ import {
   cards3,
   cardsInfo,
 } from '../builders/anki';
-import { dueCardsResponseType } from '../../src/server/routes/anki';
+import {
+  addCardResponseType,
+  answerCardResponseType,
+  deleteCardResponseType,
+  dueCardsResponseType,
+  updateCardResponseType,
+} from '../../src/server/routes/anki';
 const { fetchResponseOk } = require('../builders/fetch.js');
 jest.mock('../../src/server/LangChainHandler.ts');
 const {
@@ -18,8 +24,7 @@ const {
   setApp,
 } = require('./supertestExtensions');
 
-import AnkiClient from '../../src/server/AnkiClient';
-import e from 'express';
+import AnkiClient, { DeleteResponseType } from '../../src/server/AnkiClient';
 import { CardType } from '../../src/Types';
 jest.mock('../../src/server/AnkiClient');
 let AnkiClientMock = AnkiClient as jest.MockedClass<typeof AnkiClient>;
@@ -36,7 +41,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: false,
-    leftToStudy: 0
+    leftToStudy: 0,
   },
   {
     id: 2,
@@ -49,7 +54,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: false,
-    leftToStudy: 0
+    leftToStudy: 0,
   },
 
   {
@@ -63,7 +68,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: true,
-    leftToStudy: 0
+    leftToStudy: 0,
   },
   {
     id: 4,
@@ -76,7 +81,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: false,
-    leftToStudy: 1
+    leftToStudy: 1,
   },
 
   {
@@ -90,7 +95,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: false,
-    leftToStudy: 0
+    leftToStudy: 0,
   },
   {
     id: 6,
@@ -103,7 +108,7 @@ let exampleCards: CardType[] = [
     failInterval: 'fail',
     due: null,
     isNew: false,
-    leftToStudy: 0
+    leftToStudy: 0,
   },
 ];
 
@@ -148,6 +153,26 @@ describe('App', () => {
     fetchMock = jest.spyOn(global, 'fetch');
     fetchMock.mockResolvedValue(fetchResponseOk());
     fetchMock.mockClear();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getCardInfo.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getDeckNames.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getDeckStats.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getDueCards.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getLearnCards.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].getNewCards.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].setCardAnswered.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].addCard.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].updateCard.mockReset();
+    //@ts-ignore
+    AnkiClientMock.mock.instances[0].deleteCard.mockReset();
   });
 
   afterEach(() => {
@@ -193,43 +218,6 @@ describe('App', () => {
         .fn()
         .mockResolvedValue(decksWithStats.result);
       return expectJson('/allDecksWithStats', null, decksWithStats);
-    });
-  });
-
-  describe('POST /addCard', () => {
-    it('calls addNote action', async () => {
-      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
-        success: false,
-        message: 'example error',
-      });
-      await requestBodyAsync('/addCard', defaultRequestBody);
-      expect(AnkiClientMock.mock.instances[0].addCard).toHaveBeenCalledWith(
-        defaultRequestBody.deckName,
-        defaultRequestBody.front,
-        defaultRequestBody.back
-      );
-    });
-
-    it('returns an success on success', async () => {
-      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
-        success: true,
-        message: null,
-      });
-      let response = await requestBodyAsync('/addCard', defaultRequestBody);
-      expect(response.body.success).toEqual(true);
-      expect(response.body.message).toEqual(null);
-    });
-
-    it('returns an error on error', async () => {
-      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
-        success: false,
-        message: 'cannot create note because it is a duplicate',
-      });
-      let response = await requestBodyAsync('/addCard', defaultRequestBody);
-      expect(response.body.success).toEqual(false);
-      expect(response.body.message).toEqual(
-        'cannot create note because it is a duplicate'
-      );
     });
   });
 
@@ -302,7 +290,7 @@ describe('App', () => {
         message: null,
       });
       mockInstance.getCardInfo = jest.fn().mockResolvedValue([exampleCards[0]]);
-        
+
       await requestBodyAsync('/answerCard', defaultCard);
       expect(
         AnkiClientMock.mock.instances[0].setCardAnswered
@@ -324,6 +312,9 @@ describe('App', () => {
     });
 
     it('returns success on success', async () => {
+      AnkiClientMock.mock.instances[0].getCardInfo = jest
+        .fn()
+        .mockResolvedValue([exampleCards[0]]);
       AnkiClientMock.mock.instances[0].setCardAnswered = jest
         .fn()
         .mockResolvedValue({
@@ -331,9 +322,10 @@ describe('App', () => {
           message: null,
         });
       let response = await requestBodyAsync('/answerCard', defaultCard);
-      expect(response.body.success).toEqual(true);
-      expect(response.body.message).toEqual(null);
-      expect(response.body.card).toEqual(null);
+      let responseBody: answerCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+      expect(responseBody.message).toEqual(null);
+      expect(responseBody.card).toEqual(null);
     });
 
     it('returns success and card on success for ease 1', async () => {
@@ -344,8 +336,9 @@ describe('App', () => {
       });
       mockInstance.getCardInfo = jest.fn().mockResolvedValue([exampleCards[0]]);
       let response = await requestBodyAsync('/answerCard', ease1Card);
-      expect(response.body.success).toEqual(true);
-      expect(response.body.card).toEqual(exampleCards[0]);
+      let responseBody: answerCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+      expect(responseBody.card).toEqual(exampleCards[0]);
     });
 
     it('returns success and card on success for new cards', async () => {
@@ -359,8 +352,9 @@ describe('App', () => {
         cardId: 3,
         ease: 2,
       });
-      expect(response.body.success).toEqual(true);
-      expect(response.body.card).toEqual(exampleCards[2]);
+      let responseBody: answerCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+      expect(responseBody.card).toEqual(exampleCards[2]);
     });
 
     it('returns success and card on success for cards that have more to study', async () => {
@@ -374,8 +368,9 @@ describe('App', () => {
         cardId: 4,
         ease: 2,
       });
-      expect(response.body.success).toEqual(true);
-      expect(response.body.card).toEqual(exampleCards[3]);
+      let responseBody: answerCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+      expect(responseBody.card).toEqual(exampleCards[3]);
     });
 
     it('returns error on error', async () => {
@@ -386,17 +381,59 @@ describe('App', () => {
           message: 'example error',
         });
       let response = await requestBodyAsync('/answerCard', defaultCard);
-      expect(response.body.success).toEqual(false);
-      expect(response.body.message).toEqual('example error');
+      let responseBody: answerCardResponseType = response.body;
+      expect(responseBody.success).toEqual(false);
+      expect(responseBody.message).toEqual('example error');
+    });
+  });
+
+  describe('POST /addCard', () => {
+    it('calls addNote action', async () => {
+      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
+        success: false,
+        message: 'example error',
+      });
+      await requestBodyAsync('/addCard', defaultRequestBody);
+      expect(AnkiClientMock.mock.instances[0].addCard).toHaveBeenCalledWith(
+        defaultRequestBody.deckName,
+        defaultRequestBody.front,
+        defaultRequestBody.back
+      );
+    });
+
+    it('returns an success on success', async () => {
+      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
+        success: true,
+        message: null,
+      });
+      let response = await requestBodyAsync('/addCard', defaultRequestBody);
+      let responseBody: addCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+      expect(responseBody.message).toEqual(null);
+    });
+
+    it('returns an error on error', async () => {
+      AnkiClientMock.mock.instances[0].addCard = jest.fn().mockResolvedValue({
+        success: false,
+        message: 'cannot create note because it is a duplicate',
+      });
+      let response = await requestBodyAsync('/addCard', defaultRequestBody);
+      let responseBody: addCardResponseType = response.body;
+      expect(responseBody.success).toEqual(false);
+      expect(responseBody.message).toEqual(
+        'cannot create note because it is a duplicate'
+      );
     });
   });
 
   describe('POST /updateCard', () => {
     it('calls updateCard action', async () => {
-      AnkiClientMock.mock.instances[0].updateCard = jest.fn().mockResolvedValue({
-        success: true,
-        message: null,
-      });
+      AnkiClientMock.mock.instances[0].updateCard = jest
+        .fn()
+        .mockResolvedValue({
+          success: true,
+          message: null,
+        });
       await requestBodyAsync('/updateCard', {
         cardId: 123,
         front: 'Hola',
@@ -410,30 +447,79 @@ describe('App', () => {
     });
 
     it('returns success on success', async () => {
-      AnkiClientMock.mock.instances[0].updateCard = jest.fn().mockResolvedValue({
-        success: true,
-        message: null,
-      });
+      AnkiClientMock.mock.instances[0].updateCard = jest
+        .fn()
+        .mockResolvedValue({
+          success: true,
+          message: null,
+        });
       let response = await requestBodyAsync('/updateCard', {
         cardId: 123,
         front: 'Hola',
         back: 'Hello',
       });
-      expect(response.body.success).toEqual(true);
+      let responseBody: updateCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
     });
 
     it('returns error on error', async () => {
-      AnkiClientMock.mock.instances[0].updateCard = jest.fn().mockResolvedValue({
-        success: false,
-        message: 'example error',
-      });
+      AnkiClientMock.mock.instances[0].updateCard = jest
+        .fn()
+        .mockResolvedValue({
+          success: false,
+          message: 'example error',
+        });
       let response = await requestBodyAsync('/updateCard', {
         cardId: 123,
         front: 'Hola',
         back: 'Hello',
       });
-      expect(response.body.success).toEqual(false);
-      expect(response.body.message).toEqual('example error');
+      let responseBody: updateCardResponseType = response.body;
+      expect(responseBody.success).toEqual(false);
+      expect(responseBody.message).toEqual('example error');
+    });
+  });
+
+  describe('POST /deleteCard', () => {
+    it('calls deleteCard action', async () => {
+      let mockResponse: DeleteResponseType = {
+        success: true,
+        error: null,
+      };
+      AnkiClientMock.mock.instances[0].deleteCard = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+      await requestBodyAsync('/deleteCard', { cardId: 123 });
+      expect(AnkiClientMock.mock.instances[0].deleteCard).toHaveBeenCalledWith(
+        123
+      );
+    });
+
+    it('returns success on success', async () => {
+      let mockResponse: DeleteResponseType = {
+        success: true,
+        error: null,
+      };
+      AnkiClientMock.mock.instances[0].deleteCard = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+      let response = await requestBodyAsync('/deleteCard', { cardId: 123 });
+      let responseBody: deleteCardResponseType = response.body;
+      expect(responseBody.success).toEqual(true);
+    });
+
+    it('returns error on error', async () => {
+      let mockResponse: DeleteResponseType = {
+        success: false,
+        error: 'example error',
+      };
+      AnkiClientMock.mock.instances[0].deleteCard = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+      let response = await requestBodyAsync('/deleteCard', { cardId: 123 });
+      let responseBody: deleteCardResponseType = response.body;
+      expect(responseBody.success).toEqual(false);
+      expect(responseBody.message).toEqual('example error');
     });
   });
 });
