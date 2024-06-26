@@ -40,6 +40,7 @@ export default class StudyCard {
     this.setupDueCardsIntercept(cards);
     this.setupSaveCardIntercept();
     this.setupAnswerCardIntercept();
+    this.setupDeleteCardIntercept();
   }
 
   setupDueCardsIntercept = async (cards?: dueCardsResponseType) => {
@@ -63,6 +64,17 @@ export default class StudyCard {
     });
   };
 
+  setupDeleteCardIntercept = () => {
+    let response: updateCardResponseType = {
+      success: true,
+      message: null,
+    };
+    cy.intercept('POST', '/deleteCard', {
+      statusCode: 200,
+      body: response,
+    }).as('deleteCard');
+  }
+
   setupAnswerCardIntercept = () => {
     cy.intercept('POST', '/answerCard', {
       statusCode: 200,
@@ -76,6 +88,10 @@ export default class StudyCard {
 
   tapEdit() {
     cy.get('#edit').click();
+  }
+
+  tapDelete() {
+    cy.get('#delete').click();
   }
 
   tapSave() {
@@ -132,5 +148,9 @@ export default class StudyCard {
 
   tapAnswerAgain() {
     cy.get('#answer-again').click();
+  }
+
+  getDeleteIntercept() {
+    return cy.wait('@deleteCard');
   }
 }
