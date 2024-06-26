@@ -251,10 +251,10 @@ describe('LangChainHandler', () => {
   describe('example generator', () => {
     it('creates a runnable with the example scheme', async () => {
       const handler = new LangChainHandler();
-      await handler.generateExample('hola');
+      await handler.generateExample('hola', []);
       const exampleSchema = {
         name: 'example',
-        description: 'Generates an example sentence which includes the following phrase.',
+        description: 'Generates an example sentence which includes the following phrase but is not any of the previous phrases.',
         parameters: {
           type: 'object',
           properties: {
@@ -275,8 +275,16 @@ describe('LangChainHandler', () => {
 
     it('invokes the runnable with a human message', async () => {
       let handler = new LangChainHandler();
-      await handler.generateExample('hola');
-      expect(HumanMessage).toHaveBeenCalledWith('hola');
+      await handler.generateExample('hola', []);
+      expect(HumanMessage).toHaveBeenCalledWith('hola \n Previous Phrases: ');
+      const humanMessage = HumanMessage.mock.instances[0];
+      expect(ChatOpenAI.invoke).toHaveBeenCalledWith([humanMessage]);
+    });
+
+    it('invokes the runnable with a human message and previous phrases', async () => {
+      let handler = new LangChainHandler();
+      await handler.generateExample('hola', ['Hola, como estas?']);
+      expect(HumanMessage).toHaveBeenCalledWith('hola \n Previous Phrases: Hola, como estas?');
       const humanMessage = HumanMessage.mock.instances[0];
       expect(ChatOpenAI.invoke).toHaveBeenCalledWith([humanMessage]);
     });
@@ -287,7 +295,7 @@ describe('LangChainHandler', () => {
         englishTranslation: 'Hello, how are you?'
       };
       let handler = new LangChainHandler();
-      let result = await handler.generateExample('hola');
+      let result = await handler.generateExample('hola', []);
       expect(result).toEqual({
         exampleSpanish: 'Hola, como estas?',
         exampleEnglish: 'Hello, how are you?',

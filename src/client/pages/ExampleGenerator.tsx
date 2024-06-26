@@ -14,6 +14,7 @@ type State = {
   state: 'initial' | 'loading' | 'success' | 'error';
   exampleSpanish: string;
   exampleEnglish: string;
+  previousPhrases: string[];
 };
 export default class ExampleGenerator extends React.Component<Props, State> {
   serverHandler: ServerHandler;
@@ -24,6 +25,7 @@ export default class ExampleGenerator extends React.Component<Props, State> {
       state: 'initial',
       exampleSpanish: '',
       exampleEnglish: '',
+      previousPhrases: [],
     };
     this.serverHandler = new ServerHandler(this.serverResponse);
   }
@@ -32,10 +34,12 @@ export default class ExampleGenerator extends React.Component<Props, State> {
       state: 'success',
       exampleSpanish: response.example,
       exampleEnglish: response.translation,
+      previousPhrases: [...this.state.previousPhrases, response.example]
     });
+
   };
   requestExample = () => {
-    let query = '/example?requiredPhrase=' + this.state.userExample;
+    let query = '/example?requiredPhrase=' + this.state.userExample + '&previousPhrases=' + JSON.stringify(this.state.previousPhrases);
     this.serverHandler.request(query);
     this.setState({ state: 'loading' });
   };

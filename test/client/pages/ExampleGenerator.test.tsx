@@ -56,7 +56,7 @@ describe('ExampleGenerator', () => {
     click(requestButton());
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/example?requiredPhrase=hola',
+      '/example?requiredPhrase=hola&previousPhrases=[]',
       expect.any(Object)
     );
   });
@@ -93,6 +93,24 @@ describe('ExampleGenerator', () => {
     await fetchMockHandler.resolvePromise(0, response);
     expect(input().disabled).toBe(false);
     expect(requestButton().disabled).toBe(false);
+  });
+
+  it('should send the previous phrases to the server when new request is made', async () => {
+    render(<ExampleGenerator />);
+    change(input(), 'hola');
+    click(requestButton());
+    let response: exampleResponseType = {
+      example: 'hola, que tal?',
+      translation: 'hello, how are you?',
+    };
+    await fetchMockHandler.resolvePromise(0, response);
+    click(requestButton());
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/example?requiredPhrase=hola&previousPhrases=["hola, que tal?"]',
+      expect.any(Object)
+    );
   });
 
   it('should save the example onSaveToDeck clicked', async () => {

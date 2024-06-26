@@ -161,10 +161,10 @@ export default class LangChainHandler {
     this.model = new ChatOpenAI({ modelName: 'gpt-4o' });
   }
 
-  async generateExample(requiredPhrase: string): Promise<{exampleSpanish: string; exampleEnglish: string}>{
+  async generateExample(requiredPhrase: string, previousPhrases: string[]): Promise<{exampleSpanish: string; exampleEnglish: string}>{
     const schema = {
       name: 'example',
-      description: 'Generates an example sentence which includes the following phrase.',
+      description: 'Generates an example sentence which includes the following phrase but is not any of the previous phrases.',
       parameters: {
         type: 'object',
         properties: {
@@ -181,7 +181,7 @@ export default class LangChainHandler {
       },
     };
     const runnable = this.getRunnable(schema, 'example');
-    const result = await runnable.invoke([new HumanMessage(requiredPhrase)]);
+    const result = await runnable.invoke([new HumanMessage(`${requiredPhrase} \n Previous Phrases: ${previousPhrases}`)]);
     return {
       exampleSpanish: result.spanishExample,
       exampleEnglish: result.englishTranslation,
