@@ -75,17 +75,17 @@ describe('DeckSelector', () => {
       );
     });
 
-    it('default save direction is SpanishToEnglish', async () => {
+    it('default save direction is EnglishToSpanish', async () => {
       const decks = ['deck1', 'deck2'];
       const onSaveToDeck = jest.fn();
       await renderAndWait(<DeckDropdown open decks={decks} onSaveToDeck={onSaveToDeck} />);
       click(saveButton());
       expect(onSaveToDeck).toHaveBeenCalledWith(
         'deck1',
-        translationDirections.SpanishToEnglish,
+        translationDirections.EnglishToSpanish,
         expect.any(Function)
       );
-      expect(switchDirectionButton()).toContainText('English to Spanish');
+      expect(switchDirectionButton()).toContainText('Spanish to English');
     });
 
     it('calls onSaveToDeck with second deck when second deck is selected and button is clicked', async () => {
@@ -99,7 +99,7 @@ describe('DeckSelector', () => {
       click(saveButton());
       expect(onSaveToDeck).toHaveBeenCalledWith(
         'deck2',
-        translationDirections.SpanishToEnglish,
+        translationDirections.EnglishToSpanish,
         expect.any(Function)
       );
     });
@@ -109,11 +109,11 @@ describe('DeckSelector', () => {
       const onSaveToDeck = jest.fn();
       await renderAndWait(<DeckDropdown open decks={decks} onSaveToDeck={onSaveToDeck} />);
       await clickAndWait(switchDirectionButton());
-      expect(switchDirectionButton()).toContainText('Spanish to English');
+      expect(switchDirectionButton()).toContainText('English to Spanish');
       click(saveButton());
       expect(onSaveToDeck).toHaveBeenCalledWith(
         'deck1',
-        translationDirections.EnglishToSpanish,
+        translationDirections.SpanishToEnglish,
         expect.any(Function)
       );
     });

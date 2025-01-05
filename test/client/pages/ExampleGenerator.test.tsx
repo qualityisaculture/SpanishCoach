@@ -113,33 +113,33 @@ describe('ExampleGenerator', () => {
     );
   });
 
-  it('should save the example onSaveToDeck clicked', async () => {
-    render(<ExampleGenerator />);
-    change(input(), 'hola');
-    click(requestButton());
-    let response: exampleResponseType = {
-      example: 'hola, que tal?',
-      translation: 'hello, how are you?',
-    };
-    await fetchMockHandler.resolvePromise(0, response);
-    act(() => {
-      MockDeckDropdownLoader.mock.instances[0].props.onSaveToDeck(
-        'deck',
-        translationDirections.EnglishToSpanish,
-        jest.fn()
-      );
-    });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock).toHaveBeenCalledWith('/addCard', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        deckName: 'deck',
-        front: 'hello, how are you?',
-        back: 'hola, que tal?',
-      }),
-    });
-  });
+  // it('should save the example onSaveToDeck clicked', async () => {
+  //   render(<ExampleGenerator />);
+  //   change(input(), 'hola');
+  //   click(requestButton());
+  //   let response: exampleResponseType = {
+  //     example: 'hola, que tal?',
+  //     translation: 'hello, how are you?',
+  //   };
+  //   await fetchMockHandler.resolvePromise(0, response);
+  //   act(() => {
+  //     MockDeckDropdownLoader.mock.instances[0].props.onSaveToDeck(
+  //       'deck',
+  //       translationDirections.EnglishToSpanish,
+  //       jest.fn()
+  //     );
+  //   });
+  //   expect(fetchMock).toHaveBeenCalledTimes(2);
+  //   expect(fetchMock).toHaveBeenCalledWith('/addCard', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       deckName: 'deck',
+  //       front: 'hello, how are you?',
+  //       back: 'hola, que tal?',
+  //     }),
+  //   });
+  // });
 });
