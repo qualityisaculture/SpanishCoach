@@ -2,9 +2,9 @@
 import express from 'express';
 import path from 'path';
 
-
 const ankiRoutes = require('./routes/anki.ts');
 const translatorRoutes = require('./routes/translator.ts');
+const imageSearchRoutes = require('./routes/imageSearch.ts');
 let app;
 
 const Server = (mode: 'default' | 'dev' | 'e2e', application?: Express.Application) => {
@@ -15,6 +15,7 @@ const Server = (mode: 'default' | 'dev' | 'e2e', application?: Express.Applicati
   if (mode !== 'e2e') {
     app.use('/', ankiRoutes);
     app.use('/', translatorRoutes);
+    app.use('/', imageSearchRoutes);
   }
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, './index.html'))

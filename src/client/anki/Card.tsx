@@ -9,7 +9,7 @@ import {
 } from '../../server/routes/anki';
 
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Divider, FloatButton, Switch } from 'antd';
+import { Divider, FloatButton, Image, Switch } from 'antd';
 import EditComponent from '../components/EditComponent';
 import { red, orange, green, blue } from '@ant-design/colors';
 import { Typography } from 'antd';
@@ -36,9 +36,11 @@ type State = {
   editMode: boolean;
   card: {
     front: string;
+    frontImage?: string;
     back: string;
     originalFront: string;
     originalBack: string;
+    originalFrontImage?: string;
   } | null;
   isModalOpen: boolean;
 };
@@ -48,6 +50,7 @@ export default class Card extends React.Component<Props, State> {
   };
   constructor(props: Props) {
     super(props);
+    console.log('Card props', props);
     this.state = {
       state: 'question',
       editMode: false,
@@ -55,8 +58,10 @@ export default class Card extends React.Component<Props, State> {
         ? {
             front: props.card.front,
             back: props.card.back,
+            frontImage: props.card.frontImage,
             originalFront: props.card.front,
             originalBack: props.card.back,
+            originalFrontImage: props.card.frontImage,
           }
         : null,
       isModalOpen: false,
@@ -73,8 +78,10 @@ export default class Card extends React.Component<Props, State> {
         card: {
           front: this.props.card.front,
           back: this.props.card.back,
+          frontImage: this.props.card.frontImage,
           originalFront: this.props.card.front,
           originalBack: this.props.card.back,
+          originalFrontImage: this.props.card.frontImage,
         },
       });
     }
@@ -86,11 +93,14 @@ export default class Card extends React.Component<Props, State> {
     this.props.cardAnswered(ease);
     this.setState({ state: 'question' });
   };
-  questionEdited = (value: string) => {
+  questionEdited = (value: string, image: string) => {
+    console.log('questionEdited', value, image);
     if (!this.state.card) {
       throw new Error('Card is null');
     }
-    this.setState({ card: { ...this.state.card, front: value } });
+    this.setState({
+      card: { ...this.state.card, front: value, frontImage: image },
+    });
   };
   answerEdited = (value: string) => {
     if (!this.state.card) {
@@ -106,6 +116,7 @@ export default class Card extends React.Component<Props, State> {
       cardId: this.props.card.noteId,
       front: this.state.card.front,
       back: this.state.card.back,
+      frontImage: this.state.card.frontImage,
     };
     const response = await global.fetch('/updateCard', {
       method: 'POST',
@@ -125,6 +136,7 @@ export default class Card extends React.Component<Props, State> {
           ...this.state.card,
           front: this.state.card.originalFront,
           back: this.state.card.originalBack,
+          frontImage: this.state.card.originalFrontImage,
         },
       });
     } else {
@@ -133,6 +145,7 @@ export default class Card extends React.Component<Props, State> {
           ...this.state.card,
           originalFront: this.state.card.front,
           originalBack: this.state.card.back,
+          originalFrontImage: this.state.card.frontImage,
         },
       });
     }
@@ -143,7 +156,9 @@ export default class Card extends React.Component<Props, State> {
     } else if (id === 'edit') {
       this.setState({ editMode: true });
     } else if (id === 'delete') {
-      let deleteResult = window.confirm('Are you sure you want to delete this card?');
+      let deleteResult = window.confirm(
+        'Are you sure you want to delete this card?'
+      );
       if (deleteResult) {
         if (!this.props.card) {
           throw new Error('Card is null');
@@ -173,6 +188,7 @@ export default class Card extends React.Component<Props, State> {
           ...this.state.card,
           front: this.state.card.originalFront,
           back: this.state.card.originalBack,
+          frontImage: this.state.card.originalFrontImage,
         },
       });
     } else if (id === 'save') {
@@ -236,8 +252,10 @@ export default class Card extends React.Component<Props, State> {
         <div className="card" onClick={this.questionClicked}>
           <Question
             front={this.state.card.front}
+            frontImage={this.state.card.frontImage}
             editMode={this.state.editMode}
             questionEdited={this.questionEdited}
+            backForImage={this.state.card.back}
           />
           {this.state.state === 'answer' || this.state.editMode ? (
             <Answer
@@ -258,20 +276,43 @@ export default class Card extends React.Component<Props, State> {
 
 const Question = (props: {
   front: string;
+  frontImage?: string;
   editMode: boolean;
-  questionEdited: (value: string) => void;
+  questionEdited: (value: string, image: string) => void;
+  backForImage: string;
 }) => {
+
+  //create state for force show heading onclick image
+  const [showHeading, setShowHeading] = React.useState(false);
+  //reset showHeading state when frontImage changes
+  React.useEffect(() => {
+    setShowHeading(false);
+  }, [props.frontImage]);
   return (
     <>
-      <h4
+      {props.frontImage ? (
+        <img
+          src={props.frontImage}
+          alt="front"
+          style={{ maxHeight: '200px', maxWidth: '100%' }}
+          onClick={(event) => {
+            setShowHeading(true);
+            event?.stopPropagation();
+          }}
+        />
+      ) : null}
+      {!props.frontImage || showHeading ? (
+        <h4
         dangerouslySetInnerHTML={{ __html: props.front }}
         className="card-front ant-typography css-dev-only-do-not-override-1drr2mu"
       />
+      ) : null}
       {props.editMode ? (
         <EditComponent
           inputId="card-front-input"
           defaultValue={props.front}
           onChange={props.questionEdited}
+          defaultImage={props.backForImage}
         />
       ) : null}
     </>

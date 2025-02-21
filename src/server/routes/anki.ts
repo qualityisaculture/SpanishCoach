@@ -136,6 +136,7 @@ export type updateCardRequestType = {
   cardId: number;
   front: string;
   back: string;
+  frontImage?: string;
 };
 export type updateCardResponseType = {
   success: boolean;
@@ -147,8 +148,9 @@ ankiRoutes.post(
     const cardId = req.body.cardId;
     const front = req.body.front;
     const back = req.body.back;
+    const frontImage = req.body.frontImage;
 
-    let response = await ankiClient.updateCard(cardId, front, back);
+    let response = await ankiClient.updateCard(cardId, front, back, frontImage);
     if (response.success !== true) {
       res.json({ success: false, message: response.message });
     } else {

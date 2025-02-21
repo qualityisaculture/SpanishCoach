@@ -1,14 +1,18 @@
 import React, { ChangeEvent, ChangeEventHandler } from 'react';
-import { Input } from 'antd';
+import { Image, Input, Modal } from 'antd';
 import ButtonRow, { ButtonRowButtonType } from './ButtonRow';
+import ImageSelector from './ImageSelector';
 
 type Props = {
   defaultValue: string;
-  onChange: (value: string) => void;
+  defaultImage?: string;
+  onChange: (value: string, image?: string) => void;
   inputId?: string;
 };
 type State = {
   value: string;
+  image: string;
+  displayImageViewer: boolean;
 };
 export default class EditComponent extends React.Component<Props, State> {
   inputId: string;
@@ -17,6 +21,8 @@ export default class EditComponent extends React.Component<Props, State> {
     this.inputId = props.inputId ? props.inputId : Math.random().toString();
     this.state = {
       value: props.defaultValue,
+      displayImageViewer: false,
+      image: props.defaultImage ? props.defaultImage : '',
     };
   }
   removeFormat(selectionStart: number, selectionEnd: number, format: string) {
@@ -75,12 +81,17 @@ export default class EditComponent extends React.Component<Props, State> {
       this.addFormat(selectionStart, selectionEnd, formatLetter);
     }
   };
+  imageButtonClicked = () => {
+    this.setState({
+      displayImageViewer: !this.state.displayImageViewer,
+    });
+  };
   onChange = (e: ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     this.setState({
       value: value,
     });
-    this.props.onChange(value);
+    this.props.onChange(value, this.state.image);
   };
   render(): React.ReactNode {
     let formatButtons: ButtonRowButtonType[] = [
@@ -97,8 +108,12 @@ export default class EditComponent extends React.Component<Props, State> {
         text: 'U',
       },
     ];
+    let imageButton: ButtonRowButtonType = {
+      key: 'image',
+      text: 'P',
+    };
     return (
-      <div className='edit-component'>
+      <div className="edit-component">
         <Input
           id={this.inputId}
           value={this.state.value}
@@ -110,6 +125,33 @@ export default class EditComponent extends React.Component<Props, State> {
           onClick={this.formatButtonClicked}
           attached="below"
         />
+        <ButtonRow
+          buttons={[imageButton]}
+          onClick={this.imageButtonClicked}
+          attached="below"
+        />
+        <Modal
+          title="Select Image"
+          open={this.state.displayImageViewer}
+          footer={null}
+          onCancel={() => {
+            this.setState({
+              displayImageViewer: false,
+            });
+          }}
+        >
+          <ImageSelector
+            description={this.state.image}
+            onImageChange={(imageUrl) => {
+              this.setState({
+                image: imageUrl,
+                displayImageViewer: false,
+              });
+              this.props.onChange(this.state.value, imageUrl);
+            }}
+            onImageRemove={() => {}}
+          />
+        </Modal>
       </div>
     );
   }
