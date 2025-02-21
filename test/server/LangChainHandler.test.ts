@@ -1,5 +1,5 @@
 import LangChainHandler from '../../src/server/LangChainHandler';
-import { translationDirections } from '../../src/Enums';
+import { translationDirections, SpanishTenses } from '../../src/Enums';
 const { SpanishToEnglish, EnglishToSpanish } = translationDirections;
 const { ChatOpenAI } = require('@langchain/openai');
 const { HumanMessage } = require('@langchain/core/messages');
@@ -303,6 +303,147 @@ describe('LangChainHandler', () => {
     });
     
   })
+
+  describe('generateVerbExamples', () => {
+    it('creates a runnable with the verbExamples schema', async () => {
+      const handler = new LangChainHandler();
+      await handler.generateVerbExamples('comer', SpanishTenses.Presente, 'Generate examples for the verb "comer" in present tense.');
+      const verbExamplesSchema = {
+        name: 'verbExamples',
+        description: 'Generates examples for a verb in a particular tense.',
+        parameters: {
+          type: 'object',
+          properties: {
+            yo: {
+              type: 'string',
+              description: 'Example sentence for "Yo" conjugation',
+            },
+            tu: {
+              type: 'string',
+              description: 'Example sentence for "Tu" conjugation',
+            },
+            el: {
+              type: 'string',
+              description: 'Example sentence for "El/Ella" conjugation',
+            },
+            nosotros: {
+              type: 'string',
+              description: 'Example sentence for "Nosotros" conjugation',
+            },
+            vosotros: {
+              type: 'string',
+              description: 'Example sentence for "Vosotros" conjugation',
+            },
+            ellos: {
+              type: 'string',
+              description: 'Example sentence for "Ellos/Ellas" conjugation',
+            },
+          },
+          required: ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'],
+        },
+      };
+      return expectSchema(verbExamplesSchema);
+    });
+
+    it('invokes the runnable with a human message', async () => {
+      let handler = new LangChainHandler();
+      await handler.generateVerbExamples('comer', SpanishTenses.Presente, 'Generate examples for the verb "comer" in present tense.');
+      expect(HumanMessage).toHaveBeenCalledWith('comer in presente tense. Note: Generate examples for the verb "comer" in present tense.');
+      const humanMessage = HumanMessage.mock.instances[0];
+      expect(ChatOpenAI.invoke).toHaveBeenCalledWith([humanMessage]);
+    });
+
+    it('returns the verb examples', async () => {
+      ChatOpenAI.returnValue = {
+        yo: 'Yo como',
+        tu: 'Tú comes',
+        el: 'Él/Ella come',
+        nosotros: 'Nosotros comemos',
+        vosotros: 'Vosotros coméis',
+        ellos: 'Ellos/Ellas comen',
+      };
+      let handler = new LangChainHandler();
+      let result = await handler.generateVerbExamples('comer', SpanishTenses.Presente, 'Generate examples for the verb "comer" in present tense.');
+      expect(result).toEqual({
+        yo: 'Yo como',
+        tu: 'Tú comes',
+        el: 'Él/Ella come',
+        nosotros: 'Nosotros comemos',
+        vosotros: 'Vosotros coméis',
+        ellos: 'Ellos/Ellas comen',
+      });
+    });
+  });
+
+  describe('detectTense', () => {
+    it('creates a runnable with the tenseDetector schema', async () => {
+      const handler = new LangChainHandler();
+      await handler.detectTense('Yo como');
+      const tenseDetectorSchema = {
+        name: 'tenseDetector',
+        description: 'Detects the tense of a given Spanish sentence.',
+        parameters: {
+          type: 'object',
+          properties: {
+            tense: {
+              enum: [
+                'presente',
+                'pretérito',
+                'imperfecto',
+                'futuro',
+                'condicional',
+                'presente subjuntivo',
+                'imperfecto subjuntivo',
+                'futuro subjuntivo',
+                'presente perfecto',
+                'pluscuamperfecto',
+                'futuro perfecto',
+                'condicional perfecto',
+                'presente perfecto subjuntivo',
+                'pluscuamperfecto subjuntivo',
+                'futuro perfecto subjuntivo',
+                'unknown'
+              ],
+              type: 'string',
+              description: 'The tense of the given sentence',
+            },
+          },
+          required: ['tense'],
+        },
+      };
+      return expectSchema(tenseDetectorSchema);
+    });
+
+    it('invokes the runnable with a human message', async () => {
+      let handler = new LangChainHandler();
+      await handler.detectTense('Yo como');
+      expect(HumanMessage).toHaveBeenCalledWith('Yo como');
+      const humanMessage = HumanMessage.mock.instances[0];
+      expect(ChatOpenAI.invoke).toHaveBeenCalledWith([humanMessage]);
+    });
+
+    it('returns the detected tense', async () => {
+      ChatOpenAI.returnValue = {
+        tense: SpanishTenses.Presente,
+      };
+      let handler = new LangChainHandler();
+      let result = await handler.detectTense('Yo como');
+      expect(result).toEqual({
+        tense: SpanishTenses.Presente,
+      });
+    });
+
+    it('returns unknown if the tense cannot be detected', async () => {
+      ChatOpenAI.returnValue = {
+        tense: 'unknown',
+      };
+      let handler = new LangChainHandler();
+      let result = await handler.detectTense('Unknown sentence');
+      expect(result).toEqual({
+        tense: 'unknown',
+      });
+    });
+  });
 
   describe('chat', () => {
     it('returns a stream when passed messages', async () => {
