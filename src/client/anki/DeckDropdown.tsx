@@ -28,7 +28,7 @@ export default class DeckDropdown extends React.Component<Props, State> {
       successfulSave: false,
       failedSave: false,
       errorMessage: null,
-      saveDirection: translationDirections.SpanishToEnglish,
+      saveDirection: translationDirections.EnglishToSpanish,
     };
   }
   componentDidUpdate = (prevProps) => {

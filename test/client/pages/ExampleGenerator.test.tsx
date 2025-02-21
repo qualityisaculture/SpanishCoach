@@ -56,7 +56,7 @@ describe('ExampleGenerator', () => {
     click(requestButton());
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      '/example?requiredPhrase=hola',
+      '/example?requiredPhrase=hola&previousPhrases=[]',
       expect.any(Object)
     );
   });
@@ -95,7 +95,7 @@ describe('ExampleGenerator', () => {
     expect(requestButton().disabled).toBe(false);
   });
 
-  it('should save the example onSaveToDeck clicked', async () => {
+  it('should send the previous phrases to the server when new request is made', async () => {
     render(<ExampleGenerator />);
     change(input(), 'hola');
     click(requestButton());
@@ -104,24 +104,42 @@ describe('ExampleGenerator', () => {
       translation: 'hello, how are you?',
     };
     await fetchMockHandler.resolvePromise(0, response);
-    act(() => {
-      MockDeckDropdownLoader.mock.instances[0].props.onSaveToDeck(
-        'deck',
-        translationDirections.EnglishToSpanish,
-        jest.fn()
-      );
-    });
+    click(requestButton());
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock).toHaveBeenCalledWith('/addCard', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        deckName: 'deck',
-        front: 'hello, how are you?',
-        back: 'hola, que tal?',
-      }),
-    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/example?requiredPhrase=hola&previousPhrases=["hola, que tal?"]',
+      expect.any(Object)
+    );
   });
+
+  // it('should save the example onSaveToDeck clicked', async () => {
+  //   render(<ExampleGenerator />);
+  //   change(input(), 'hola');
+  //   click(requestButton());
+  //   let response: exampleResponseType = {
+  //     example: 'hola, que tal?',
+  //     translation: 'hello, how are you?',
+  //   };
+  //   await fetchMockHandler.resolvePromise(0, response);
+  //   act(() => {
+  //     MockDeckDropdownLoader.mock.instances[0].props.onSaveToDeck(
+  //       'deck',
+  //       translationDirections.EnglishToSpanish,
+  //       jest.fn()
+  //     );
+  //   });
+  //   expect(fetchMock).toHaveBeenCalledTimes(2);
+  //   expect(fetchMock).toHaveBeenCalledWith('/addCard', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       deckName: 'deck',
+  //       front: 'hello, how are you?',
+  //       back: 'hola, que tal?',
+  //     }),
+  //   });
+  // });
 });

@@ -6,6 +6,9 @@ An mobile web extension to Anki, which allows you to quickly translate, generate
 
 - **Install AnkiConnect**: https://ankiweb.net/shared/info/2055492159
 - **Export your ChatGPT Token**: EXPORT OPENAI_API_KEY="..."
+- **Register custom search engine https://cse.google.com/cse and export your Google Custom Search Engine ID**: EXPORT GOOGLE_CSE_ID="..."
+- **Register a new app and enable Google Custom Search Engine API an Export your API Key**: EXPORT GOOGLE_API_KEY="..."
+- 
 - **Checkout Repo**
 - **Install dependencies**: npm i
 - **Build solution**: npm run build

@@ -9,6 +9,7 @@ type Props = {
   output?: string;
   onTranslation: (translation: { spanish: string; english: string }) => void;
   focusRef: any;
+  defaultInputLanguage?: 'english' | 'spanish';
 };
 type State = {
   input: string;
@@ -21,7 +22,7 @@ type State = {
   complexOpen: boolean;
   complexTranslationStillLoading: boolean;
   translationStillLoading: boolean;
-  inputLanguage: string;
+  inputLanguage: "english" | "spanish";
 };
 
 class Translator extends React.Component<Props, State> {
@@ -43,12 +44,12 @@ class Translator extends React.Component<Props, State> {
       complexOpen: false,
       complexTranslationStillLoading: false,
       translationStillLoading: false,
-      inputLanguage: 'spanish',
+      inputLanguage: this.props.defaultInputLanguage || 'spanish',
     };
   }
 
   switchInputLanguage = () => {
-    let newLanguage =
+    let newLanguage: 'spanish' | 'english' =
       this.state.inputLanguage == 'spanish' ? 'english' : 'spanish';
     this.setState({
       inputLanguage: newLanguage,
@@ -205,7 +206,7 @@ class Translator extends React.Component<Props, State> {
             checkedChildren="Spanish to English"
             unCheckedChildren="English to Spanish"
             onChange={this.switchInputLanguage}
-            defaultChecked
+            defaultChecked={this.state.inputLanguage == 'spanish'}
           />
         </div>
         <Collapse

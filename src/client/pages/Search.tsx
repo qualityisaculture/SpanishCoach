@@ -56,6 +56,7 @@ export default class Search extends React.Component<Props, State> {
         <Translator
           onTranslation={this.onTranslation}
           focusRef={this.focusRef}
+          defaultInputLanguage='english'
         />
         <Divider />
         <DeckDropdownLoader

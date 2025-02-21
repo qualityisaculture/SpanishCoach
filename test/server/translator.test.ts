@@ -114,10 +114,23 @@ describe('Translator', () => {
         .expect('You must provide a requiredPhrase parameter');
     });
 
+    it('returns a 400 error if the previousPhrases query is not provided', async () => {
+      return request(app)
+        .get('/example?requiredPhrase=Hola')
+        .expect(400)
+        .expect('You must provide a previousPhrases parameter');
+    });
+
     it('requests an example from LangChainHandler', async () => {
-      await request(app).get('/example?requiredPhrase=Hola');
+      await request(app).get('/example?requiredPhrase=Hola&previousPhrases=[]');
       expect(LangChainHandler).toHaveBeenCalledWith();
-      expect(mockGenerateExample).toHaveBeenCalledWith('Hola');
+      expect(mockGenerateExample).toHaveBeenCalledWith('Hola', []);
+    });
+
+    it('requests an example from LangChainHandler with previous examples', async () => {
+      await request(app).get(`/example?requiredPhrase=Hola&previousPhrases=["Hola, que tal"]`);
+      expect(LangChainHandler).toHaveBeenCalledWith();
+      expect(mockGenerateExample).toHaveBeenCalledWith('Hola', ['Hola, que tal']);
     });
 
     it('returns the example response', async () => {
@@ -127,7 +140,7 @@ describe('Translator', () => {
         exampleEnglish: 'Hello, how are you',
       }
       setMockResponse(mockResponse);
-      return expectJson('/example?requiredPhrase=' + requiredPhrase, null, {
+      return expectJson('/example?requiredPhrase=' + requiredPhrase + ' &previousPhrases=[]', null, {
         example: 'Hola, que tal',
         translation: 'Hello, how are you',
       });

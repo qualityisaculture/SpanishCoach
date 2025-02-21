@@ -28,6 +28,7 @@ export type CardType = {
   id: number;
   noteId: number;
   front: string;
+  frontImage?: string;
   back: string;
   failInterval: string;
   hardInterval: string;

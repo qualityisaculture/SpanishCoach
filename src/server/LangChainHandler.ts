@@ -1,11 +1,10 @@
-import { translationDirections } from '../Enums';
+import { translationDirections, SpanishTenses } from '../Enums';
 const { SpanishToEnglish, EnglishToSpanish } = translationDirections;
 
 import { ChatOpenAI } from '@langchain/openai';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { HumanMessage, BaseMessage } from '@langchain/core/messages';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
-
 
 const simpleSpanishExtractionFunctionSchema = {
   name: 'translator',
@@ -151,7 +150,19 @@ type complexResponse = {
 type simpleResponse = {
   translation: string;
 };
+type TenseDetectionResponse = {
+  tense: SpanishTenses | 'unknown';
+};
 export type availableResponses = 'simple' | 'complex';
+
+type VerbExamplesResponse = {
+  yo: string;
+  tu: string;
+  el: string;
+  nosotros: string;
+  vosotros: string;
+  ellos: string;
+};
 
 export default class LangChainHandler {
   model: any;
@@ -161,10 +172,10 @@ export default class LangChainHandler {
     this.model = new ChatOpenAI({ modelName: 'gpt-4o' });
   }
 
-  async generateExample(requiredPhrase: string): Promise<{exampleSpanish: string; exampleEnglish: string}>{
+  async generateExample(requiredPhrase: string, previousPhrases: string[]): Promise<{exampleSpanish: string; exampleEnglish: string}>{
     const schema = {
       name: 'example',
-      description: 'Generates an example sentence which includes the following phrase.',
+      description: 'Generates an example sentence which includes the following phrase but is not any of the previous phrases.',
       parameters: {
         type: 'object',
         properties: {
@@ -181,12 +192,14 @@ export default class LangChainHandler {
       },
     };
     const runnable = this.getRunnable(schema, 'example');
-    const result = await runnable.invoke([new HumanMessage(requiredPhrase)]);
+    const result = await runnable.invoke([new HumanMessage(`${requiredPhrase} \n Previous Phrases: ${previousPhrases}`)]);
     return {
       exampleSpanish: result.spanishExample,
       exampleEnglish: result.englishTranslation,
     };
   }
+
+  //generate a
 
   async chat(messages: BaseMessage[]): Promise<IterableReadableStream<{content: string}>>{
     if (messages.length === 0) {
@@ -224,7 +237,94 @@ export default class LangChainHandler {
     };
   }
 
-  getRunnable(schema: any, name: 'translator' | 'example' = 'translator') {
+  async generateVerbExamples(verb: string, tense: SpanishTenses, note: string): Promise<VerbExamplesResponse> {
+    const schema = {
+      name: 'translator',
+      description: 'Generates examples for a verb in a particular tense.',
+      parameters: {
+        type: 'object',
+        properties: {
+          yo: {
+            type: 'string',
+            description: 'Example sentence for "Yo" conjugation',
+          },
+          tu: {
+            type: 'string',
+            description: 'Example sentence for "Tu" conjugation',
+          },
+          el: {
+            type: 'string',
+            description: 'Example sentence for "El/Ella" conjugation',
+          },
+          nosotros: {
+            type: 'string',
+            description: 'Example sentence for "Nosotros" conjugation',
+          },
+          vosotros: {
+            type: 'string',
+            description: 'Example sentence for "Vosotros" conjugation',
+          },
+          ellos: {
+            type: 'string',
+            description: 'Example sentence for "Ellos/Ellas" conjugation',
+          },
+        },
+        required: ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'],
+      },
+    };
+    const runnable = this.getRunnable(schema);
+    const result = await runnable.invoke([new HumanMessage(`${verb} in ${tense} tense. Note: ${note}`)]);
+    return {
+      yo: result.yo,
+      tu: result.tu,
+      el: result.el,
+      nosotros: result.nosotros,
+      vosotros: result.vosotros,
+      ellos: result.ellos,
+    };
+  }
+
+  async detectTense(sentence: string): Promise<TenseDetectionResponse> {
+    const schema = {
+      name: 'tenseDetector',
+      description: 'Detects the tense of a given Spanish sentence.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tense: {
+            enum: [
+              'presente',
+              'pretérito',
+              'imperfecto',
+              'futuro',
+              'condicional',
+              'presente subjuntivo',
+              'imperfecto subjuntivo',
+              'futuro subjuntivo',
+              'presente perfecto',
+              'pluscuamperfecto',
+              'futuro perfecto',
+              'condicional perfecto',
+              'presente perfecto subjuntivo',
+              'pluscuamperfecto subjuntivo',
+              'futuro perfecto subjuntivo',
+              'unknown'
+            ],
+            type: 'string',
+            description: 'The tense of the given sentence',
+          },
+        },
+        required: ['tense'],
+      },
+    };
+    const runnable = this.getRunnable(schema, 'tenseDetector');
+    const result = await runnable.invoke([new HumanMessage(sentence)]);
+    return {
+      tense: result.tense,
+    };
+  }
+
+  getRunnable(schema: any, name: 'translator' | 'example' | 'tenseDetector' = 'translator') {
     return this.model
       .bind({
         functions: [schema],

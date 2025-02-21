@@ -81,6 +81,7 @@ translatorRouter.get('/chat', async (req, res) => {
 
 export type exampleRequestType = {
   requiredPhrase: string;
+  previousPhrases: string[];
 }
 export type exampleResponseType = {
   example: string;
@@ -91,9 +92,14 @@ translatorRouter.get('/example', async (req, res) => {
     res.status(400).send('You must provide a requiredPhrase parameter');
     return;
   }
+  if (!req.query.previousPhrases) {
+    res.status(400).send('You must provide a previousPhrases parameter');
+    return;
+  }
   let requiredPhrase = req.query.requiredPhrase;
+  let previousPhrases: string[] = JSON.parse(req.query.previousPhrases);
   let lch = new LangChainHandler();
-  let translation = await lch.generateExample(requiredPhrase);
+  let translation = await lch.generateExample(requiredPhrase, previousPhrases);
   res.json({
     example: translation.exampleSpanish,
     translation: translation.exampleEnglish,

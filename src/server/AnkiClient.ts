@@ -9,6 +9,7 @@ type AnkiConnectCardType = {
   fields: {
     Front: { value: string; order: number };
     Back: { value: string; order: number };
+    Extra?: { value: string; order: number };
   };
   css: string;
   cardId: number;
@@ -109,6 +110,9 @@ type AddCardType = {
         Front: string;
         Back: string;
       };
+      picture?: {
+        url: string;
+      }
     };
   };
 };
@@ -122,7 +126,13 @@ type UpdateNoteType = {
       fields: {
         Front: string;
         Back: string;
+        Extra?: string;
       };
+      picture?: {
+        url: string;
+        filename: string;
+        fields: string[];
+      }
     };
   };
 };
@@ -153,6 +163,7 @@ export default class AnkiClient {
   constructor() {}
 
   postToAnki = (body: PostTypes) => {
+    console.log('posting to anki', JSON.stringify(body));
     return fetch('http://localhost:8765', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -199,7 +210,8 @@ export default class AnkiClient {
   getCardFromAnkiCard = (card: AnkiConnectCardType): CardType => {
     const due = card.due > 1000000 ? card.due * 1000 : null;
     const intervals = this.getIntervals(card);
-    return {
+    console.log('intervals', card);
+    let response: CardType = {
       id: card.cardId,
       noteId: card.note,
       front: card.fields.Front.value,
@@ -212,6 +224,10 @@ export default class AnkiClient {
       isNew: card.type === 0,
       leftToStudy: card.left,
     };
+    if (card.fields.Extra) {
+      response.frontImage = card.fields.Extra.value;
+    }
+    return response;
   };
 
   async getCardInfo(cardIdArray: number[]): Promise<CardType[]> {
@@ -271,13 +287,17 @@ export default class AnkiClient {
   async getDeckNames(): Promise<string[]> {
     let response = await this.postToAnki({ action: 'deckNames', version: 6 });
     let json: AnkiConnectDeckNamesResponseType = await response.json();
-    return json.result;
+    let deckNames = json.result;
+    let excludeDecks = ['Spanish Words', 'Conjoined phrases', 'English to Spanish Grammar', 'Essential phrases', 'Futuro', 'Idioms', 'Spanish Grammar', 'Spanish Sentences', 'Spanish to English', 'Random'];
+    deckNames = deckNames.filter((deck) => !excludeDecks.includes(deck));
+    return deckNames;
   }
 
   async addCard(
     deckName: string,
     front: string,
-    back: string
+    back: string,
+    frontImage?: string
   ): Promise<{ success: boolean; message: string | null }> {
     let addNoteResponse = await this.postToAnki({
       action: 'addNote',
@@ -289,7 +309,7 @@ export default class AnkiClient {
           fields: {
             Front: front,
             Back: back,
-          },
+          }
         },
       },
     });
@@ -305,9 +325,11 @@ export default class AnkiClient {
   async updateCard(
     cardId: number,
     front: string,
-    back: string
+    back: string,
+    image?: string
   ): Promise<{ success: boolean; message: string | null }> {
-    let response = await this.postToAnki({
+    console.log('updating card', image);
+    let updateMessage: UpdateNoteType = {
       action: 'updateNoteFields',
       version: 6,
       params: {
@@ -319,7 +341,12 @@ export default class AnkiClient {
           },
         },
       },
-    });
+    };
+    if (image) {
+      updateMessage.params.note.fields.Extra = image;
+    }
+    console.log('updateMessage', updateMessage);
+    let response = await this.postToAnki(updateMessage);
     let json: AnkiConnectUpdateNoteResponseType = await response.json();
     if (json.error !== null) {
       return { success: false, message: json.error };
