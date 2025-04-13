@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: card-service
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+
+databases:
+  - name: card-service-db
+    databaseName: card_service_prod
+    user: card_service_user
+    plan: free 
