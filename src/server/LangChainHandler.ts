@@ -164,6 +164,36 @@ type VerbExamplesResponse = {
   ellos: string;
 };
 
+const explanationFunctionSchema = {
+  name: 'explanation',
+  description: 'Provides a simple, intermediate-level explanation of a Spanish word or phrase in Spanish. If a single word, include 1-2 example sentences. If a phrase, provide a contextual explanation.',
+  parameters: {
+    type: 'object',
+    properties: {
+      explanation: {
+        type: 'string',
+        description: 'A Spanish explanation of the word or phrase. No English. For single words, include 1-2 example sentences. For phrases, provide a contextual explanation.'
+      }
+    },
+    required: ['explanation']
+  }
+};
+
+const simplifyFunctionSchema = {
+  name: 'simplify',
+  description: 'Simplifies a Spanish explanation to be even easier to understand, using only simple Spanish.',
+  parameters: {
+    type: 'object',
+    properties: {
+      simplifiedExplanation: {
+        type: 'string',
+        description: 'A simpler Spanish explanation of the original explanation. No English.'
+      }
+    },
+    required: ['simplifiedExplanation']
+  }
+};
+
 export default class LangChainHandler {
   model: any;
   parser: any;
@@ -324,7 +354,26 @@ export default class LangChainHandler {
     };
   }
 
-  getRunnable(schema: any, name: 'translator' | 'example' | 'tenseDetector' = 'translator') {
+  async generateExplanation(spanish: string): Promise<{ explanation: string; complexity: string }> {
+    const prompt = `Explica en español, de manera intermedia, la siguiente palabra o frase. Si es una sola palabra, incluye 1-2 frases de ejemplo. Si es una frase, proporciona una explicación contextual. No uses inglés.\n\nPalabra o frase: ${spanish}`;
+    const runnable = this.getRunnable(explanationFunctionSchema, 'explanation');
+    const result = await runnable.invoke([new HumanMessage(prompt)]);
+    return {
+      explanation: result.explanation,
+      complexity: 'intermediate',
+    };
+  }
+
+  async generateSimplifiedExplanation(spanish: string): Promise<{ simplifiedExplanation: string }> {
+    const prompt = `Simplifica aún más la siguiente explicación en español, usando solo español muy simple. No uses inglés.\n\nPalabra o frase: ${spanish}`;
+    const runnable = this.getRunnable(simplifyFunctionSchema, 'simplify');
+    const result = await runnable.invoke([new HumanMessage(prompt)]);
+    return {
+      simplifiedExplanation: result.simplifiedExplanation,
+    };
+  }
+
+  getRunnable(schema: any, name: 'translator' | 'example' | 'tenseDetector' | 'explanation' | 'simplify' = 'translator') {
     return this.model
       .bind({
         functions: [schema],

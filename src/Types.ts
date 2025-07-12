@@ -1,5 +1,6 @@
 
 import { Send, Query } from 'express-serve-static-core';
+import { ExplanationComplexity } from './Enums';
 export interface TypedResponse<ResBody> extends Express.Response {
   json: Send<ResBody, this>;
 }
@@ -41,4 +42,13 @@ export type CardType = {
 
 export type Cards = {
   cards: CardType[];
+}
+
+export interface ExplanationResponse {
+  explanation: string;
+  complexity: ExplanationComplexity;
+}
+
+export interface SimplifyResponse {
+  simplifiedExplanation: string;
 }

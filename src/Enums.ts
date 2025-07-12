@@ -20,3 +20,13 @@ export enum SpanishTenses {
   PluscuamperfectoSubjuntivo = 'pluscuamperfecto subjuntivo',
   FuturoPerfectoSubjuntivo = 'futuro perfecto subjuntivo'
 }
+
+export enum AppMode {
+  Explanation = 'explanation',
+  Translation = 'translation'
+}
+
+export enum ExplanationComplexity {
+  Simple = 'simple',
+  Intermediate = 'intermediate'
+}

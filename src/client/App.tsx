@@ -21,6 +21,8 @@ class App extends React.Component<Props> {
     const router = createBrowserRouter([
       { path: '/', element: <Search focusRef={this.props.focusRef} /> },
       { path: '/search', element: <Search focusRef={this.props.focusRef} /> },
+      { path: '/explain', element: <Search focusRef={this.props.focusRef} /> },
+      { path: '/translate', element: <Search focusRef={this.props.focusRef} /> },
       { path: '/study', element: <Study /> },
       { path: '/exampleGenerator', element: <ExampleGenerator /> },
     ]);

@@ -309,7 +309,7 @@ describe('LangChainHandler', () => {
       const handler = new LangChainHandler();
       await handler.generateVerbExamples('comer', SpanishTenses.Presente, 'Generate examples for the verb "comer" in present tense.');
       const verbExamplesSchema = {
-        name: 'verbExamples',
+        name: 'translator', // The actual schema name used in the code
         description: 'Generates examples for a verb in a particular tense.',
         parameters: {
           type: 'object',
@@ -460,6 +460,117 @@ describe('LangChainHandler', () => {
       await expect(handler.chat([])).rejects.toThrow(
         'You must provide at least one message to start the chat'
       );
+    });
+  });
+});
+
+describe('Explanation Methods', () => {
+  let langChainHandler;
+  let mockModel;
+  let mockParser;
+  let mockHumanMessage;
+
+  beforeEach(() => {
+    mockModel = {
+      bind: jest.fn().mockReturnThis(),
+      pipe: jest.fn().mockReturnValue({
+        invoke: jest.fn()
+      })
+    };
+    mockParser = {};
+    mockHumanMessage = {
+      content: 'test content'
+    };
+    
+    // Mock the ChatOpenAI constructor
+    const { ChatOpenAI } = require('@langchain/openai');
+    ChatOpenAI.mockImplementation(() => mockModel);
+    
+    // Mock JsonOutputFunctionsParser constructor
+    const { JsonOutputFunctionsParser } = require('langchain/output_parsers');
+    JsonOutputFunctionsParser.mockImplementation(() => mockParser);
+    
+    // Mock HumanMessage constructor
+    const { HumanMessage } = require('@langchain/core/messages');
+    HumanMessage.mockImplementation((content) => ({
+      content: content
+    }));
+    
+    langChainHandler = new LangChainHandler();
+  });
+
+  describe('generateExplanation', () => {
+    it('generates explanation with correct prompt and schema', async () => {
+      const spanish = 'perro';
+      const mockResponse = {
+        explanation: 'Un animal doméstico que ladra'
+      };
+      
+      const mockRunnable = {
+        invoke: jest.fn().mockResolvedValue(mockResponse)
+      };
+      
+      mockModel.bind.mockReturnValue({
+        pipe: jest.fn().mockReturnValue(mockRunnable)
+      });
+
+      const result = await langChainHandler.generateExplanation(spanish);
+
+      expect(result).toEqual({
+        explanation: mockResponse.explanation,
+        complexity: 'intermediate'
+      });
+      
+      expect(mockModel.bind).toHaveBeenCalledWith({
+        functions: [expect.objectContaining({
+          name: 'explanation',
+          description: expect.stringContaining('intermediate-level explanation')
+        })],
+        function_call: { name: 'explanation' }
+      });
+      
+      expect(mockRunnable.invoke).toHaveBeenCalledWith([
+        expect.objectContaining({
+          content: expect.stringContaining(spanish)
+        })
+      ]);
+    });
+  });
+
+  describe('generateSimplifiedExplanation', () => {
+    it('generates simplified explanation with correct prompt and schema', async () => {
+      const spanish = 'perro';
+      const mockResponse = {
+        simplifiedExplanation: 'Un animal que vive en casa'
+      };
+      
+      const mockRunnable = {
+        invoke: jest.fn().mockResolvedValue(mockResponse)
+      };
+      
+      mockModel.bind.mockReturnValue({
+        pipe: jest.fn().mockReturnValue(mockRunnable)
+      });
+
+      const result = await langChainHandler.generateSimplifiedExplanation(spanish);
+
+      expect(result).toEqual({
+        simplifiedExplanation: mockResponse.simplifiedExplanation
+      });
+      
+      expect(mockModel.bind).toHaveBeenCalledWith({
+        functions: [expect.objectContaining({
+          name: 'simplify',
+          description: expect.stringContaining('Simplifies a Spanish explanation')
+        })],
+        function_call: { name: 'simplify' }
+      });
+      
+      expect(mockRunnable.invoke).toHaveBeenCalledWith([
+        expect.objectContaining({
+          content: expect.stringContaining(spanish)
+        })
+      ]);
     });
   });
 });

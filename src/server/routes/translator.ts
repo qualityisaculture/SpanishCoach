@@ -106,4 +106,43 @@ translatorRouter.get('/example', async (req, res) => {
   });
 });
 
+// EXPLANATION MODE ENDPOINTS (AI-powered)
+translatorRouter.get('/explain', async (req, res) => {
+  const spanish = req.query.spanish as string;
+  const complexity = req.query.complexity as string || 'intermediate';
+  if (!spanish) {
+    res.status(400).send('You must provide a spanish parameter');
+    return;
+  }
+  const lch = new LangChainHandler();
+  try {
+    let result;
+    if (complexity === 'simple') {
+      result = await lch.generateSimplifiedExplanation(spanish);
+      // For consistency, return as { explanation, complexity }
+      res.json({ explanation: result.simplifiedExplanation, complexity: 'simple' });
+    } else {
+      result = await lch.generateExplanation(spanish);
+      res.json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate explanation', details: error.message });
+  }
+});
+
+translatorRouter.get('/simplify', async (req, res) => {
+  const spanish = req.query.spanish as string;
+  if (!spanish) {
+    res.status(400).send('You must provide a spanish parameter');
+    return;
+  }
+  const lch = new LangChainHandler();
+  try {
+    const result = await lch.generateSimplifiedExplanation(spanish);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to simplify explanation', details: error.message });
+  }
+});
+
 module.exports = translatorRouter;
