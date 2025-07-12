@@ -2,6 +2,7 @@ import React from 'react';
 import { Input, Card, Button, Radio } from 'antd';
 const { TextArea } = Input;
 import ServerHandler from '../ServerHandler';
+import ChatDialog from './ChatDialog';
 
 type Props = {
   onExplanation: (explanation: { spanish: string; explanation: string }) => void;
@@ -16,6 +17,7 @@ type State = {
   explanationLoading: boolean;
   complexity: ExplanationComplexity;
   lastRequestedComplexity: ExplanationComplexity;
+  showConversation: boolean;
 };
 
 export default class ExplanationMode extends React.Component<Props, State> {
@@ -37,6 +39,7 @@ export default class ExplanationMode extends React.Component<Props, State> {
       explanationLoading: false,
       complexity: 'simple', // Default to simple
       lastRequestedComplexity: 'simple',
+      showConversation: false,
     };
   }
 
@@ -113,8 +116,16 @@ export default class ExplanationMode extends React.Component<Props, State> {
     }
   };
 
+  handleStartConversation = () => {
+    this.setState({ showConversation: true });
+  };
+
+  handleCloseConversation = () => {
+    this.setState({ showConversation: false });
+  };
+
   render() {
-    const { input, explanation, explanationLoading, lastRequestedComplexity } = this.state;
+    const { input, explanation, explanationLoading, lastRequestedComplexity, showConversation } = this.state;
 
     return (
       <div>
@@ -150,6 +161,45 @@ export default class ExplanationMode extends React.Component<Props, State> {
             <div style={{ minHeight: '60px' }}>
               {explanationLoading ? 'Generating explanation...' : explanation}
             </div>
+            {!showConversation && (
+              <div style={{ marginTop: 16 }}>
+                <Button 
+                  type="dashed" 
+                  onClick={this.handleStartConversation}
+                  style={{ width: '100%' }}
+                >
+                  Ask follow-up questions
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {showConversation && explanation && (
+          <Card 
+            title="Follow-up Questions" 
+            style={{ marginTop: 16 }}
+            extra={
+              <Button 
+                size="small" 
+                onClick={this.handleCloseConversation}
+              >
+                Close
+              </Button>
+            }
+          >
+            <ChatDialog
+              initialMessages={[
+                {
+                  message: `Explain this Spanish word/phrase: "${input}"`,
+                  type: 'human',
+                },
+                {
+                  message: explanation,
+                  type: 'bot',
+                },
+              ]}
+            />
           </Card>
         )}
       </div>
