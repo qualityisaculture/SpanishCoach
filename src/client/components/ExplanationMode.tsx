@@ -181,8 +181,10 @@ export default class ExplanationMode extends React.Component<Props, State> {
           width={800}
           style={{ top: 20 }}
           bodyStyle={{ maxHeight: '70vh', overflow: 'auto' }}
+          destroyOnClose={true}
         >
           <ChatDialog
+            key={`${input}-${explanation}`}
             initialMessages={[
               {
                 message: `Explain this Spanish word/phrase: "${input}"`,
