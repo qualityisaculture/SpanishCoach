@@ -164,7 +164,7 @@ describe('ExplanationMode', () => {
     });
   });
 
-  it('shows simplify button when explanation is present', () => {
+  it('shows expand button when explanation is present (default simple complexity)', () => {
     const ServerHandler = require('../../../src/client/ServerHandler').default;
     
     render(
@@ -180,13 +180,13 @@ describe('ExplanationMode', () => {
       explanationCallback({ explanation: 'Test explanation' }, true);
     });
     
-    // The simplify button should be present in the card
+    // The expand button should be present in the card (since default complexity is 'simple')
     const button = element('button');
     expect(button).not.toBeNull();
-    expect(button.textContent).toContain('Simplify');
+    expect(button.textContent).toContain('Expand');
   });
 
-  it('calls simplify request when simplify button is clicked', () => {
+  it('calls explanation request with intermediate complexity when expand button is clicked', () => {
     const ServerHandler = require('../../../src/client/ServerHandler').default;
     
     render(
@@ -202,15 +202,63 @@ describe('ExplanationMode', () => {
       explanationCallback({ explanation: 'Test explanation' }, true);
     });
     
-    // Click the simplify button
-    const simplifyButton = element('button');
+    // Click the expand button (which will switch to intermediate complexity)
+    const expandButton = element('button');
     act(() => {
-      click(simplifyButton);
+      click(expandButton);
     });
     
-    // Should call the simplify request - need to get the second ServerHandler instance
-    const simplifyHandler = ServerHandler.mock.instances[1];
-    expect(simplifyHandler.request).toHaveBeenCalledWith('/simplify?spanish=');
+    // Should call the explanation request with intermediate complexity
+    const explanationHandler = ServerHandler.mock.instances[0];
+    expect(explanationHandler.request).toHaveBeenCalledWith('/explain?spanish=&complexity=intermediate');
+  });
+
+  it('shows conversation button when explanation is present', () => {
+    const ServerHandler = require('../../../src/client/ServerHandler').default;
+    
+    render(
+      <ExplanationMode 
+        onExplanation={mockOnExplanation}
+        focusRef={null}
+      />
+    );
+
+    // Get the callback function and simulate receiving an explanation
+    const explanationCallback = ServerHandler.mock.calls[0][0];
+    act(() => {
+      explanationCallback({ explanation: 'Test explanation' }, true);
+    });
+    
+    // The conversation button should be present
+    const conversationButton = element('button[type="dashed"]');
+    expect(conversationButton).not.toBeNull();
+    expect(conversationButton.textContent).toContain('Ask follow-up questions');
+  });
+
+  it('shows conversation modal when conversation button is clicked', () => {
+    const ServerHandler = require('../../../src/client/ServerHandler').default;
+    
+    render(
+      <ExplanationMode 
+        onExplanation={mockOnExplanation}
+        focusRef={null}
+      />
+    );
+
+    // Get the callback function and simulate receiving an explanation
+    const explanationCallback = ServerHandler.mock.calls[0][0];
+    act(() => {
+      explanationCallback({ explanation: 'Test explanation' }, true);
+    });
+    
+    // Click the conversation button
+    const conversationButton = element('button[type="dashed"]');
+    act(() => {
+      click(conversationButton);
+    });
+    
+    // Should show the conversation modal
+    expect(element('.ant-modal-title')).toContainText('Follow-up Questions');
   });
 
   it('cancels explanation request when input is cleared', () => {

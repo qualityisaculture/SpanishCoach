@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input, Card, Button, Radio } from 'antd';
+import { Input, Card, Button, Radio, Modal } from 'antd';
 const { TextArea } = Input;
 import ServerHandler from '../ServerHandler';
 import ChatDialog from './ChatDialog';
@@ -161,47 +161,40 @@ export default class ExplanationMode extends React.Component<Props, State> {
             <div style={{ minHeight: '60px' }}>
               {explanationLoading ? 'Generating explanation...' : explanation}
             </div>
-            {!showConversation && (
-              <div style={{ marginTop: 16 }}>
-                <Button 
-                  type="dashed" 
-                  onClick={this.handleStartConversation}
-                  style={{ width: '100%' }}
-                >
-                  Ask follow-up questions
-                </Button>
-              </div>
-            )}
+            <div style={{ marginTop: 16 }}>
+              <Button 
+                type="dashed" 
+                onClick={this.handleStartConversation}
+                style={{ width: '100%' }}
+              >
+                Ask follow-up questions
+              </Button>
+            </div>
           </Card>
         )}
 
-        {showConversation && explanation && (
-          <Card 
-            title="Follow-up Questions" 
-            style={{ marginTop: 16 }}
-            extra={
-              <Button 
-                size="small" 
-                onClick={this.handleCloseConversation}
-              >
-                Close
-              </Button>
-            }
-          >
-            <ChatDialog
-              initialMessages={[
-                {
-                  message: `Explain this Spanish word/phrase: "${input}"`,
-                  type: 'human',
-                },
-                {
-                  message: explanation,
-                  type: 'bot',
-                },
-              ]}
-            />
-          </Card>
-        )}
+        <Modal
+          title="Follow-up Questions"
+          open={showConversation}
+          onCancel={this.handleCloseConversation}
+          footer={null}
+          width={800}
+          style={{ top: 20 }}
+          bodyStyle={{ maxHeight: '70vh', overflow: 'auto' }}
+        >
+          <ChatDialog
+            initialMessages={[
+              {
+                message: `Explain this Spanish word/phrase: "${input}"`,
+                type: 'human',
+              },
+              {
+                message: explanation,
+                type: 'bot',
+              },
+            ]}
+          />
+        </Modal>
       </div>
     );
   }
